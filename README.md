@@ -10,3 +10,7 @@ cd build
 cmake ../
 make install
 ```
+
+## Inspiration
+
+This project was started due to the lack of a better alternative, and was heavily inspired by suckless' [dmenu](https://tools.suckless.org/dmenu/)
