@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <X11/Xlib.h>
@@ -9,11 +10,23 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "NullDereferences"
 
+#define UTF_INVALID 0xFFFD
+#define UTF_SIZ 4
+
+const unsigned char utfbyte[UTF_SIZ + 1] = {0x80, 0, 0xC0, 0xE0, 0xF0};
+const unsigned char utfmask[UTF_SIZ + 1] = {0xC0, 0x80, 0xE0, 0xF0, 0xF8};
+const int64_t utfmin[UTF_SIZ + 1] = {0, 0, 0x80, 0x800, 0x10000};
+const int64_t utfmax[UTF_SIZ + 1] = {0x10FFFF, 0x7F, 0x7FF, 0xFFFF, 0x10FFFF};
+
+char text[2048] = {0};
+uint32_t textlen = 0;
+uint32_t cursor = 0;
+
 enum {
     SchemeNorm, SchemeSel, SchemeOut, SchemeLast
 }; /* color schemes */
 
-static const char *colors[SchemeLast][2] = {
+const char *colors[SchemeLast][2] = {
         /*     fg         bg       */
         [SchemeNorm] = {"#a6c2e8", "#090408"},
         [SchemeSel] = {"#a6c2e8", "#99210A"},
@@ -38,7 +51,7 @@ enum {
 }; /* Clr scheme index */
 typedef XftColor Clr;
 
-static const char *use_fonts[] = {
+const char *use_fonts[] = {
         "JetBrainsMono:size=14"
 };
 
@@ -86,36 +99,28 @@ void drw_fontset_free(struct Fnt *font) {
 }
 
 void drw_free() {
-    if (drw->drawable) {
-        XFreePixmap(drw->dpy, drw->drawable);
-    }
-    if (drw->gc) {
-        XFreeGC(drw->dpy, drw->gc);
-    }
-    if (drw->fonts) {
-        drw_fontset_free(drw->fonts);
-    }
-    if (drw) {
-        free(drw);
-    }
+    XFreePixmap(drw->dpy, drw->drawable);
+    XFreeGC(drw->dpy, drw->gc);
+    drw_fontset_free(drw->fonts);
+    free(drw);
 }
 
 void cleanup() {
     size_t i;
 
-    if (win) {
-        XDestroyWindow(drw->dpy, win);
-    }
+    XUngrabKey(drw->dpy, AnyKey, AnyModifier, drw->root);
 
-    if (drw) {
-        XUngrabKey(drw->dpy, AnyKey, AnyModifier, drw->root);
-        XSync(drw->dpy, False);
-        XCloseDisplay(drw->dpy);
-    }
     for (i = 0; i < SchemeLast; ++i) {
         free(scheme[i]);
     }
+
+    Display *dpy = drw->dpy;
+
     drw_free();
+
+    XSync(dpy, False);
+    XCloseDisplay(dpy);
+
 }
 
 void die(uint32_t code) {
@@ -260,7 +265,7 @@ void drw_setscheme(Clr *scm) {
     }
 }
 
-void drw_rect(int32_t x, int32_t y, uint32_t w, uint32_t h, int32_t filled, int32_t invert) {
+void drw_rect(int32_t x, int32_t y, uint32_t w, uint32_t h, int32_t filled, uint8_t invert) {
     if (!drw || !drw->scheme) {
         return;
     }
@@ -272,16 +277,220 @@ void drw_rect(int32_t x, int32_t y, uint32_t w, uint32_t h, int32_t filled, int3
     }
 }
 
-void draw_field() {
+int32_t min(int32_t o1, int32_t o2) {
+    return o1 < o2 ? o1 : o2;
+}
+
+int64_t utf8decodebyte(const char c, size_t *i) {
+    for (*i = 0; *i < (UTF_SIZ + 1); ++(*i)) {
+        if (((unsigned char) c & utfmask[*i]) == utfbyte[*i]) {
+            return (unsigned char) c & ~utfmask[*i];
+        }
+    }
+    return 0;
+}
+
+size_t utf8validate(int64_t *u, size_t i) {
+    if (!(utfmin[i] <= *u && *u <= utfmax[i]) || (0xD800 <= *u && *u <= 0xDFFF)) {
+        *u = UTF_INVALID;
+    }
+    for (i = 1; *u > utfmax[i]; ++i);
+    return i;
+}
+
+size_t utf8decode(const char *c, int64_t *u, size_t clen) {
+    size_t i, j, len, type;
+    int64_t udecoded;
+
+    *u = UTF_INVALID;
+    if (!clen) {
+        return 0;
+    }
+    udecoded = utf8decodebyte(c[0], &len);
+    if (!(1 <= len && len <= UTF_SIZ)) {
+        return 1;
+    }
+    for (i = 1, j = 1; i < clen && j < len; ++i, ++j) {
+        udecoded = (udecoded << 6) | utf8decodebyte(c[i], &type);
+        if (type) {
+            return j;
+        }
+    }
+    if (j < len) {
+        return 0;
+    }
+    *u = udecoded;
+    utf8validate(u, len);
+    return len;
+}
+
+void drw_font_getexts(struct Fnt *font, const char *stext, uint32_t len, uint32_t *w, uint32_t *h) {
+    XGlyphInfo ext;
+
+    if (!font || !stext) {
+        return;
+    }
+
+    XftTextExtentsUtf8(font->dpy, font->xfont, (XftChar8 *) stext, len, &ext);
+    if (w) {
+        *w = ext.xOff;
+    }
+    if (h) {
+        *h = font->h;
+    }
+}
+
+int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, const char *stext, uint8_t invert) {
+    char buf[1024];
+    int32_t ty;
+    uint32_t ew;
+    XftDraw *d = NULL;
+    struct Fnt *usedfont, *curfont, *nextfont;
+    size_t i, len;
+    int32_t utf8strlen, utf8charlen, render = x || y || w || h;
+    int64_t utf8codepoint = 0;
+    const char *utf8str;
+    FcCharSet *fccharset;
+    FcPattern *fcpattern;
+    FcPattern *match;
+    XftResult result;
+    int32_t charexists = 0;
+
+    if (!drw || (render && !drw->scheme) || !stext || !drw->fonts) {
+        return 0;
+    }
+    if (!render) {
+        w = ~w;
+    } else {
+        XSetForeground(drw->dpy, drw->gc, drw->scheme[invert ? ColFg : ColBg].pixel);
+        XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
+        d = XftDrawCreate(drw->dpy, drw->drawable, DefaultVisual(drw->dpy, drw->screen),
+                          DefaultColormap(drw->dpy, drw->screen));
+        x += lpad;
+        w -= lpad;
+    }
+
+    usedfont = drw->fonts;
+    for (;;) {
+        utf8strlen = 0;
+        utf8str = stext;
+        nextfont = NULL;
+        while (*stext) {
+            utf8charlen = utf8decode(stext, &utf8codepoint, UTF_SIZ);
+            for (curfont = drw->fonts; curfont; curfont = curfont->next) {
+                charexists = charexists || XftCharExists(drw->dpy, curfont->xfont, utf8codepoint);
+                if (charexists) {
+                    if (curfont == usedfont) {
+                        utf8strlen += utf8charlen;
+                        stext += utf8charlen;
+                    } else {
+                        nextfont = curfont;
+                    }
+                    break;
+                }
+            }
+
+            if (!charexists || nextfont) {
+                break;
+            } else {
+                charexists = 0;
+            }
+        }
+
+        if (utf8strlen) {
+            drw_font_getexts(usedfont, utf8str, utf8strlen, &ew, NULL);
+
+            for (len = min(utf8strlen, sizeof(buf) - 1); len && ew > w; --len) {
+                drw_font_getexts(usedfont, utf8str, len, &ew, NULL);
+            }
+
+            if (len) {
+                memcpy(buf, utf8str, len);
+                buf[len] = '\0';
+                if (len < utf8strlen) {
+                    for (i = len; i && i > len - 3; buf[--i] = '.'); /* NOP */
+                }
+
+                if (render) {
+                    ty = y + (h - usedfont->h) / 2 + usedfont->xfont->ascent;
+                    XftDrawStringUtf8(d, &drw->scheme[invert ? ColBg : ColFg], usedfont->xfont,
+                                      x, ty, (XftChar8 *) buf, len);
+                }
+                x += ew;
+                w -= ew;
+            }
+        }
+
+        if (!*stext) {
+            break;
+        } else if (nextfont) {
+            charexists = 0;
+            usedfont = nextfont;
+        } else {
+            charexists = 1;
+            fccharset = FcCharSetCreate();
+            FcCharSetAddChar(fccharset, utf8codepoint);
+
+            if (!drw->fonts->pattern) {
+                fputs("The first font in the cache must be loaded from a font string!", stderr);
+                die(1);
+            }
+
+            fcpattern = FcPatternDuplicate(drw->fonts->pattern);
+            FcPatternAddCharSet(fcpattern, FC_CHARSET, fccharset);
+            FcPatternAddBool(fcpattern, FC_SCALABLE, FcTrue);
+            FcPatternAddBool(fcpattern, FC_COLOR, FcFalse);
+
+            FcConfigSubstitute(NULL, fcpattern, FcMatchPattern);
+            FcDefaultSubstitute(fcpattern);
+            match = XftFontMatch(drw->dpy, drw->screen, fcpattern, &result);
+
+            FcCharSetDestroy(fccharset);
+            FcPatternDestroy(fcpattern);
+
+            if (match) {
+                usedfont = xfont_create(NULL, match);
+                if (usedfont && XftCharExists(drw->dpy, usedfont->xfont, utf8codepoint)) {
+                    for (curfont = drw->fonts; curfont->next; curfont = curfont->next); /* NOP */
+                    curfont->next = usedfont;
+                } else {
+                    xfont_free(usedfont);
+                    usedfont = drw->fonts;
+                }
+            }
+        }
+    }
+    if (d) {
+        XftDrawDestroy(d);
+    }
+
+    return x + (render ? w : 0);
+}
+
+void drw_map(int x, int y, uint32_t w, uint32_t h) {
+    if (!drw) {
+        return;
+    }
+
+    XCopyArea(drw->dpy, drw->drawable, win, drw->gc, x, y, w, h, x, y);
+    XSync(drw->dpy, False);
+}
+
+void drawmenu() {
     uint32_t curpos;
     struct item *item;
-    int32_t x = 0, y = 0, w;
+    int32_t x = 0, y = 0, w = 100000;
 
     drw_setscheme(scheme[SchemeNorm]);
     drw_rect(0, 0, mw, mh, 1, 1);
+
+    drw_text(x, 0, w, bh, lrpad / 2, text, 0);
+
+    drw_map(0, 0, mw, mh);
 }
 
 void setup() {
+    strcpy(text, "Display Text\0");
     int32_t x, y;
     XSetWindowAttributes swa;
     XIM xim;
@@ -307,7 +516,7 @@ void setup() {
     }
 
     x = y = 0;
-    mw = 300;
+    mw = 1000;
 
     swa.override_redirect = True;
     swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
@@ -327,28 +536,82 @@ void setup() {
     XMapRaised(drw->dpy, win);
 
     drw_resize(mw, mh);
-    draw_field();
-}
-
-void drw_map(Window window, int x, int y, uint32_t w, uint32_t h) {
-    if (!drw) {
-        return;
-    }
-
-    XCopyArea(drw->dpy, drw->drawable, window, drw->gc, x, y, w, h, x, y);
-    XSync(drw->dpy, False);
+    drawmenu();
 }
 
 void grabfocus() {
-    //TODO: Handle focus grabs
+    struct timespec ts = {.tv_sec = 0, .tv_nsec = 10000000};
+    Window focuswin;
+    int32_t i, revertwin;
+    for (i = 0; i < 100; ++i) {
+        XGetInputFocus(drw->dpy, &focuswin, &revertwin);
+        if (focuswin == win) {
+            return;
+        }
+        XSetInputFocus(drw->dpy, win, RevertToParent, CurrentTime);
+        nanosleep(&ts, NULL);
+    }
+    fputs("Cannot grab focus!\n", stderr);
+}
+
+void __inline__ print_buf() {
+    fprintf(stdout, "Current buffer: \"%s\", buflen = %u, cursor = %u\n", text, textlen, cursor);
+}
+
+void insert(const char *str, ssize_t n) {
+    fprintf(stdout, "Inserting: \"%s\", n = %u\n", str, n);
+    if (strlen(text) + n > sizeof(text) - 1) {
+        return;
+    }
+    if (n > 0) {
+        memcpy(text + cursor, str, n);
+    }
+    cursor += n;
+    textlen += n;
+    print_buf();
 }
 
 void keypress(XKeyEvent *ev) {
-    //TODO: Handle Keypresses
-}
-
-void paste() {
-    //TODO: Make paste
+    char buf[32];
+    int32_t len;
+    KeySym ksym;
+    Status status;
+    fprintf(stdout, "Pressed: %u\n", ev->keycode);
+    len = XmbLookupString(xic, ev, buf, sizeof(buf), &ksym, &status);
+    uint8_t shift = (ev->state & ShiftMask) > 0;
+    if (ev->state & ControlMask) {
+        switch (ksym) {
+            case XK_q:
+                fputs("Quit signal recieved, dying...\n", stdout);
+                die(0);
+                break;
+            case XK_0:
+                fputs("0\n", stdout);
+                break;
+            default:
+                break;
+        }
+    } else {
+        switch (ksym) {
+            case XK_BackSpace:
+                if (cursor) {
+                    --cursor;
+                    --textlen;
+                    text[cursor] = '\0';
+                    print_buf();
+                }
+                break;
+            case XK_Delete:
+                fputs("Delete\n", stdout);
+                break;
+            default:
+                if (!iscntrl(*buf)) {
+                    insert(buf, len);
+                }
+                break;
+        }
+    }
+    drawmenu();
 }
 
 void run() {
@@ -366,7 +629,7 @@ void run() {
                 break;
             case Expose:
                 if (ev.xexpose.count == 0) {
-                    drw_map(win, 0, 0, mw, mh);
+                    drw_map(0, 0, mw, mh);
                 }
                 break;
             case FocusIn:
@@ -377,11 +640,11 @@ void run() {
             case KeyPress:
                 keypress(&ev.xkey);
                 break;
-            case SelectionNotify:
-                if (ev.xselection.property == utf8) {
-                    paste();
-                }
-                break;
+//            case SelectionNotify:
+//                if (ev.xselection.property == utf8) {
+//                    paste();
+//                }
+//                break;
             case VisibilityNotify:
                 if (ev.xvisibility.state != VisibilityUnobscured) {
                     XRaiseWindow(drw->dpy, win);
@@ -394,7 +657,6 @@ void run() {
 }
 
 int main(int argc, char **argv) {
-
     int32_t screen;
     Display *dpy;
     Window root;
