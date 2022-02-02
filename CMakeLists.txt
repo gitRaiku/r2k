@@ -3,9 +3,9 @@ project(r2k C)
 
 set(CMAKE_C_STANDARD 90)
 
-add_executable(r2k main.c)
+add_executable(r2k main.c config.h)
 
-set(CMAKE_C_FLAGS "-O3 -I/usr/X11R6/include -I/usr/include/freetype2 -L/usr/X11R6/lib -lXft -lX11 -lfontconfig")
+set(CMAKE_C_FLAGS "-Og -I/usr/X11R6/include -I/usr/include/freetype2 -L/usr/X11R6/lib -lXft -lX11 -lfontconfig")
         # "-D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700"
         # "-D_POSIX_C_SOURCE=200809L -DVERSION=\"0.1\""
         # )

@@ -7,6 +7,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 
+#include "config.h"
+
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "NullDereferences"
 
@@ -19,20 +21,17 @@ const int64_t utfmin[UTF_SIZ + 1] = {0, 0, 0x80, 0x800, 0x10000};
 const int64_t utfmax[UTF_SIZ + 1] = {0x10FFFF, 0x7F, 0x7FF, 0xFFFF, 0x10FFFF};
 
 char text[2048] = {0};
-uint32_t textlen = 0;
-uint32_t cursor = 0;
+size_t cursor = 0;
 
-enum {
-    SchemeNorm, SchemeSel, SchemeOut, SchemeLast
-}; /* color schemes */
+uint8_t **results;
+uint32_t res_count = 0;
+uint32_t res_selected = 0;
 
-const char *colors[SchemeLast][2] = {
-        /*     fg         bg       */
-        [SchemeNorm] = {"#a6c2e8", "#090408"},
-        [SchemeSel] = {"#a6c2e8", "#99210A"},
-        [SchemeOut] = {"#a6c2e8", "#3147C7"},
+struct item {
+    char *text;
+    struct item *left, *right;
+    int32_t out;
 };
-
 
 typedef struct {
     Cursor cursor;
@@ -51,10 +50,6 @@ enum {
 }; /* Clr scheme index */
 typedef XftColor Clr;
 
-const char *use_fonts[] = {
-        "JetBrainsMono:size=14"
-};
-
 int32_t bh, mw, mh;
 
 Clr *scheme[SchemeLast];
@@ -65,7 +60,7 @@ Atom clip, utf8;
 
 XIC xic;
 
-Window win;
+Window root, parentwin, win;
 
 struct Drw {
     unsigned int w, h;
@@ -137,6 +132,12 @@ void *ecalloc(size_t nmemb, size_t size) {
     return p;
 }
 
+/// TODO: Implement a romanji to kana program
+char *str_to_kana(char *str) {
+    fputs(str, stdout);
+    return str;
+}
+
 struct Fnt *xfont_create(const char *fontname, FcPattern *fontpattern) {
     struct Fnt *font;
     XftFont *xfont = NULL;
@@ -188,7 +189,7 @@ struct Fnt *drw_fontset_create(const char *fonts[], size_t fontcount) {
     return (drw->fonts = ret);
 }
 
-struct Drw *drw_create(Display *dpy, int screen, Window root, unsigned int w, unsigned int h) {
+struct Drw *drw_create(Display *dpy, int screen, unsigned int w, unsigned int h) {
     struct Drw *t_drw = (struct Drw *) ecalloc(1, sizeof(struct Drw));
 
     t_drw->dpy = dpy;
@@ -281,6 +282,10 @@ int32_t min(int32_t o1, int32_t o2) {
     return o1 < o2 ? o1 : o2;
 }
 
+int32_t max(int32_t o1, int32_t o2) {
+    return o1 > o2 ? o1 : o2;
+}
+
 int64_t utf8decodebyte(const char c, size_t *i) {
     for (*i = 0; *i < (UTF_SIZ + 1); ++(*i)) {
         if (((unsigned char) c & utfmask[*i]) == utfbyte[*i]) {
@@ -324,14 +329,14 @@ size_t utf8decode(const char *c, int64_t *u, size_t clen) {
     return len;
 }
 
-void drw_font_getexts(struct Fnt *font, const char *stext, uint32_t len, uint32_t *w, uint32_t *h) {
+void drw_font_getexts(struct Fnt *font, const char *txt, uint32_t len, uint32_t *w, uint32_t *h) {
     XGlyphInfo ext;
 
-    if (!font || !stext) {
+    if (!font || !txt) {
         return;
     }
 
-    XftTextExtentsUtf8(font->dpy, font->xfont, (XftChar8 *) stext, len, &ext);
+    XftTextExtentsUtf8(font->dpy, font->xfont, (XftChar8 *) txt, len, &ext);
     if (w) {
         *w = ext.xOff;
     }
@@ -340,7 +345,7 @@ void drw_font_getexts(struct Fnt *font, const char *stext, uint32_t len, uint32_
     }
 }
 
-int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, const char *stext, uint8_t invert) {
+int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, const char *txt, uint8_t invert) {
     char buf[1024];
     int32_t ty;
     uint32_t ew;
@@ -356,7 +361,7 @@ int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, co
     XftResult result;
     int32_t charexists = 0;
 
-    if (!drw || (render && !drw->scheme) || !stext || !drw->fonts) {
+    if (!drw || (render && !drw->scheme) || !txt || !drw->fonts) {
         return 0;
     }
     if (!render) {
@@ -373,16 +378,16 @@ int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, co
     usedfont = drw->fonts;
     for (;;) {
         utf8strlen = 0;
-        utf8str = stext;
+        utf8str = txt;
         nextfont = NULL;
-        while (*stext) {
-            utf8charlen = utf8decode(stext, &utf8codepoint, UTF_SIZ);
+        while (*txt) {
+            utf8charlen = utf8decode(txt, &utf8codepoint, UTF_SIZ);
             for (curfont = drw->fonts; curfont; curfont = curfont->next) {
                 charexists = charexists || XftCharExists(drw->dpy, curfont->xfont, utf8codepoint);
                 if (charexists) {
                     if (curfont == usedfont) {
                         utf8strlen += utf8charlen;
-                        stext += utf8charlen;
+                        txt += utf8charlen;
                     } else {
                         nextfont = curfont;
                     }
@@ -421,7 +426,7 @@ int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, co
             }
         }
 
-        if (!*stext) {
+        if (!*txt) {
             break;
         } else if (nextfont) {
             charexists = 0;
@@ -476,47 +481,95 @@ void drw_map(int x, int y, uint32_t w, uint32_t h) {
     XSync(drw->dpy, False);
 }
 
+uint32_t drw_fontset_getwidth(const char *txt) {
+    if (!drw || !drw->fonts || !txt) {
+        return 0;
+    }
+    return drw_text(0, 0, 0, 0, 0, txt, 0);
+}
+
+uint32_t textw(const char *x) {
+    return drw_fontset_getwidth(x) + lrpad;
+}
+
+/// TODO: Display the second line containing the results
 void drawmenu() {
     uint32_t curpos;
     struct item *item;
-    int32_t x = 0, y = 0, w = 100000;
+    int32_t x = 0, y = 0, w;
 
     drw_setscheme(scheme[SchemeNorm]);
     drw_rect(0, 0, mw, mh, 1, 1);
 
+    w = mw - x;
+    drw_setscheme(scheme[SchemeNorm]);
     drw_text(x, 0, w, bh, lrpad / 2, text, 0);
+
+    curpos = textw(text) - textw(&text[cursor]);
+    if ((curpos += lrpad / 2 - 1) < w) {
+        drw_setscheme(scheme[SchemeNorm]);
+        drw_rect(x + curpos, 2, 2, bh - 4, 1, 0);
+    }
+
+    {
+        uint32_t i, cur_pos = x;
+        for (i = 0; i < res_count; ++i) {
+            if (res_selected == i) {
+                drw_setscheme(scheme[SchemeSel]);
+            } else {
+                drw_setscheme(scheme[SchemeNorm]);
+            }
+            drw_text(cur_pos, y + bh, w, bh, lrpad / 2, results[i], 0);
+            cur_pos += textw(results[i]);
+        }
+    }
+
 
     drw_map(0, 0, mw, mh);
 }
 
+void grabfocus() {
+    struct timespec ts = {.tv_sec = 0, .tv_nsec = 10000000};
+    Window focuswin;
+    int32_t i, revertwin;
+    for (i = 0; i < 100; ++i) {
+        XGetInputFocus(drw->dpy, &focuswin, &revertwin);
+        if (focuswin == win) {
+            return;
+        }
+        XSetInputFocus(drw->dpy, win, RevertToParent, CurrentTime);
+        nanosleep(&ts, NULL);
+    }
+    fputs("Cannot grab focus!\n", stderr);
+}
+
 void setup() {
-    strcpy(text, "Display Text\0");
-    int32_t x, y;
+    int32_t x, y, i;
+    uint32_t du;
     XSetWindowAttributes swa;
     XIM xim;
+    Window w, dw, *dws;
     XWindowAttributes wa;
     XClassHint ch = {"r2k", "r2k"};
 
-    {
-        uint32_t i;
-        for (i = 0; i < SchemeLast; ++i) {
-            scheme[i] = drw_scm_create(colors[i], 2);
-        }
+    for (i = 0; i < SchemeLast; ++i) {
+        scheme[i] = drw_scm_create(colors[i], 2);
     }
 
     clip = XInternAtom(drw->dpy, "CLIPBOARD", False);
     utf8 = XInternAtom(drw->dpy, "UTF8_STRING", False);
 
     bh = drw->fonts->h + 2;
-    mh = 2 * bh;
+    mh = 2 * bh + 2;
 
     if (!XGetWindowAttributes(drw->dpy, drw->root, &wa)) {
         fprintf(stdout, "Could not get embedding window attributes: 0x%lx", drw->root);
         die(1);
     }
 
-    x = y = 0;
-    mw = 1000;
+    x = 0;
+    y = 0;
+    mw = wa.width;
 
     swa.override_redirect = True;
     swa.background_pixel = scheme[SchemeNorm][ColBg].pixel;
@@ -535,27 +588,31 @@ void setup() {
 
     XMapRaised(drw->dpy, win);
 
+    if (parentwin != root) {
+        XSelectInput(drw->dpy, parentwin, FocusChangeMask | SubstructureNotifyMask);
+        if (XQueryTree(drw->dpy, parentwin, &dw, &w, &dws, &du) && dws) {
+            for (i = 0; i < du && dws[i] != win; ++i) {
+                XSelectInput(drw->dpy, dws[i], FocusChangeMask);
+                XFree(dws);
+            }
+        }
+        grabfocus();
+    }
+
     drw_resize(mw, mh);
     drawmenu();
 }
 
-void grabfocus() {
-    struct timespec ts = {.tv_sec = 0, .tv_nsec = 10000000};
-    Window focuswin;
-    int32_t i, revertwin;
-    for (i = 0; i < 100; ++i) {
-        XGetInputFocus(drw->dpy, &focuswin, &revertwin);
-        if (focuswin == win) {
-            return;
-        }
-        XSetInputFocus(drw->dpy, win, RevertToParent, CurrentTime);
-        nanosleep(&ts, NULL);
-    }
-    fputs("Cannot grab focus!\n", stderr);
+size_t nextrune(int32_t inc) {
+    ssize_t n;
+
+    /* Return location of next utf8 rune in the given direction (+1 or -1) */
+    for (n = cursor + inc; n + inc >= 0 && (text[n] & 0xc0) == 0x80; n += inc);
+    return n;
 }
 
 void __inline__ print_buf() {
-    fprintf(stdout, "Current buffer: \"%s\", buflen = %u, cursor = %u\n", text, textlen, cursor);
+    fprintf(stdout, "Current buffer: \"%s\", cursor = %u\n", text, cursor);
 }
 
 void insert(const char *str, ssize_t n) {
@@ -563,11 +620,11 @@ void insert(const char *str, ssize_t n) {
     if (strlen(text) + n > sizeof(text) - 1) {
         return;
     }
+    memmove(&text[cursor + n], &text[cursor], sizeof(text) - cursor - max(n, 0));
     if (n > 0) {
-        memcpy(text + cursor, str, n);
+        memcpy(&text[cursor], str, n);
     }
     cursor += n;
-    textlen += n;
     print_buf();
 }
 
@@ -581,36 +638,76 @@ void keypress(XKeyEvent *ev) {
     uint8_t shift = (ev->state & ShiftMask) > 0;
     if (ev->state & ControlMask) {
         switch (ksym) {
-            case XK_q:
+            case XK_C: /* Passthrough */
+            case XK_c:
                 fputs("Quit signal recieved, dying...\n", stdout);
                 die(0);
                 break;
-            case XK_0:
-                fputs("0\n", stdout);
+            case XK_i:
+                ksym = XK_Home;
+                break;
+            case XK_a:
+                ksym = XK_End;
+                break;
+            case XK_d:
+                text[cursor] = '\0';
+                break;
+            case XK_u:
+                insert(NULL, 0 - cursor);
                 break;
             default:
-                break;
-        }
-    } else {
-        switch (ksym) {
-            case XK_BackSpace:
-                if (cursor) {
-                    --cursor;
-                    --textlen;
-                    text[cursor] = '\0';
-                    print_buf();
-                }
-                break;
-            case XK_Delete:
-                fputs("Delete\n", stdout);
-                break;
-            default:
-                if (!iscntrl(*buf)) {
-                    insert(buf, len);
-                }
                 break;
         }
     }
+
+    switch (ksym) {
+        case XK_Delete:
+            if (text[cursor] == '\0') {
+                return;
+            }
+            cursor = nextrune(+1);
+            /* Fallthrough */
+        case XK_BackSpace:
+            if (cursor == 0) {
+                return;
+            }
+            insert(NULL, nextrune(-1) - cursor);
+            break;
+        case XK_End:
+            if (text[cursor] != '\0') {
+                cursor = strlen(text);
+                break;
+            }
+        case XK_Home:
+            cursor = 0;
+            break;
+        case XK_Left:
+            if (cursor) {
+                cursor = nextrune(-1);
+            }
+            break;
+        case XK_Right:
+            if (text[cursor] != '\0') {
+                cursor = nextrune(+1);
+            }
+            break;
+        case XK_Up:
+            if (res_selected < res_count - 1) {
+                ++res_selected;
+            }
+            break;
+        case XK_Down:
+            if (res_selected > 0) {
+                --res_selected;
+            }
+            break;
+        default:
+            if (!iscntrl(*buf)) {
+                insert(buf, len);
+            }
+            break;
+    }
+
     drawmenu();
 }
 
@@ -656,10 +753,30 @@ void run() {
     }
 }
 
+void setup_dummy_results() {
+    res_count = 2;
+    uint8_t kamisama[13] = {0xe3, 0x81, 0x8b, 0xe3, 0x81, 0xbf, 0xe3, 0x81, 0x95, 0xe3, 0x81, 0xbe, 0x00};
+    uint8_t Raiku[6] = {0x52, 0x61, 0x69, 0x6b, 0x75, 0x00};
+    results = calloc(2, sizeof(uint8_t *));
+    results[0] = calloc(13, sizeof(uint8_t));
+    strcpy(results[0], kamisama);
+    results[1] = calloc(6, sizeof(uint8_t));
+    strcpy(results[1], Raiku);
+}
+
+/// TODO: Find the actual selected window
+Window focused_window(Display *dpy) {
+//    Window focused;
+//    int32_t revert_to;
+//    XGetInputFocus(dpy, &focused, &revert_to);
+//    return focused;
+    return root;
+}
+
 int main(int argc, char **argv) {
+    setup_dummy_results();
     int32_t screen;
     Display *dpy;
-    Window root;
     XWindowAttributes wa;
 
     if (!(dpy = XOpenDisplay(NULL))) {
@@ -669,23 +786,31 @@ int main(int argc, char **argv) {
 
     screen = DefaultScreen(dpy);
     root = RootWindow(dpy, screen);
+
+    parentwin = focused_window(dpy);
+    fprintf(stdout, "Parent: 0x%x\n", parentwin);
+    fprintf(stdout, "Root: 0x%x\n", root);
+
     if (!XGetWindowAttributes(dpy, root, &wa)) {
         fputs("Could not get root window attributes!\n", stderr);
         die(1);
     }
-    drw = drw_create(dpy, screen, root, wa.width, wa.height);
+
+    if (!XGetWindowAttributes(dpy, parentwin, &wa)) {
+        fprintf(stdout, "Could not get embedding window attributes: 0x%lx", parentwin);
+        die(1);
+    }
+
+    drw = drw_create(dpy, screen, wa.width, wa.height);
+
     if (!drw_fontset_create(use_fonts, sizeof(use_fonts) / sizeof(use_fonts[0]))) {
         fputs("Fonts could not be loaded", stderr);
         die(1);
     }
+
     lrpad = drw->fonts->h;
 
     keyboard_grab(drw->dpy);
-
-    if (!XGetWindowAttributes(dpy, root, &wa)) {
-        fprintf(stdout, "Could not get embedding window attributes: 0x%lx", root);
-        die(1);
-    }
 
     setup();
     run();
