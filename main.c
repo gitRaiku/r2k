@@ -33,10 +33,6 @@ struct item {
     int32_t out;
 };
 
-typedef struct {
-    Cursor cursor;
-} Cur;
-
 struct Fnt {
     Display *dpy;
     unsigned int h;
