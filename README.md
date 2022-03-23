@@ -1,14 +1,12 @@
 # r2k
 
-A simple romanji to kana input method for the X11 window system
+A simple romaji to kana input method for the X11 window system based on the [JMDict dictionary](http://jmdict.org/).
 
 ## Build and installation
 
 ```sh
-mkdir build
-cd build
-cmake ../
-make install
+make # For simply building the project
+sudo make install # For also installing the binaries
 ```
 
 ## Inspiration

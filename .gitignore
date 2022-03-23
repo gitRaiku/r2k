@@ -2,3 +2,4 @@ cmake-build-debug/
 .idea/
 r2k
 r2kd
+src/*.o

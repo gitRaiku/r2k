@@ -131,8 +131,8 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
       if (buf[cl] != 'a' && buf[cl] != 'e' && buf[cl] != 'i' && buf[cl] != 'o' && buf[cl] != 'u') {
         str_append(romajiBuf, rl, "っ");
         ++cl;
+        continue;
       }
-      continue;
     }
     switch (buf[cl]) {
       case 'a':
@@ -291,9 +291,10 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             str_append(romajiBuf, rl, "じょ");
             break;
           default:
+            --cl;
             break;
         }
-        cl += 3;
+        cl += 2;
         break;
       case 't':
         switch (buf[cl+1]) {
@@ -788,7 +789,7 @@ int32_t start_daemon(pid_t sid) {
 int main() {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
-  set_logging_level(10);
+  set_logging_level(0);
 
   pid = fork();
   if (pid < 0) {
