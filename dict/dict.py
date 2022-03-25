@@ -3,8 +3,8 @@
 import xml.etree.ElementTree as ET
 from operator import itemgetter
 
-dic = open('/home/arch/Git/r2k/dict/RaikuDict', 'w', encoding='utf-8')
-# bad = open('/home/arch/temp/RaikuDictLong', 'w', encoding='utf-8')
+dic = open('/home/raiku/Git/r2k/dict/RaikuDict', 'w', encoding='utf-8')
+# bad = open('/home/raiku/temp/RaikuDictLong', 'w', encoding='utf-8')
 
 wbuf = []
 
@@ -87,7 +87,7 @@ def fix_rebs(rebs):
     return list(dict.fromkeys(rebs))
 
 def main():
-    tree = ET.parse('/home/arch/Git/r2k/dict/JMdict_e.xml')
+    tree = ET.parse('/home/raiku/Git/r2k/dict/JMdict_e.xml')
     root = tree.getroot()
     l = root.__len__()
     print("Loaded dict!")
