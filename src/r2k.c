@@ -15,6 +15,7 @@
 #include "log.h"
 
 #include "config.h"
+#include "type.h"
 
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ 4
@@ -193,7 +194,7 @@ void update_results() {
     }
     tl = strlen(token);
     results[cr] = malloc(sizeof(**results) * (tl + 1));
-    strncpy(results[cr], token, tl);
+    strcpy(results[cr], token);
     results[cr][tl] = '\0';
     ++cr;
   }
@@ -411,7 +412,7 @@ void drw_font_getexts(struct Fnt *font, const char *txt, uint32_t len, uint32_t 
 int32_t drw_text(int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t lpad, const char *txt, uint8_t invert) {
   char buf[1024];
   int32_t ty;
-  uint32_t ew;
+  uint32_t ew = 0;
   XftDraw *d = NULL;
   struct Fnt *usedfont, *curfont, *nextfont;
   size_t i, len;
@@ -691,12 +692,13 @@ void insert(const char *str, ssize_t n) {
   print_buf();
 }
 
-void type_selection() { /// TODO: Do not rely on an external python script for this
-  char execString[512];
+void type_selection() { /// TODO: Fuck you
+  type_str(results[res_selected]);
+  /*char execString[512];
   snprintf(execString, sizeof(execString), "/usr/local/bin/argToKp %s", results[res_selected]);
   if (system(execString) == -1) {
     log_format(6, stderr, "Could not call [%s]! %m\n", execString);
-  }
+  }*/
 }
 
 uint32_t mod(int32_t val, int32_t m) {
@@ -930,7 +932,7 @@ int main(int argc, char **argv) {
 
   keyboard_grab(drw->dpy);
 
-  /*strcpy(text, "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
+  /*strcpy(text, "jisho");
   update_results();
   {
     int32_t i;

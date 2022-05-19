@@ -4,7 +4,8 @@ all: client server
 
 CC = gcc
 DATE := $(shell date "+%Y-%m-%d")
-COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 # -fmodulo-sched
+# COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
+COMPILE_FLAGS = -Ofast -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
 INCLUDE_FLAGS = -I/usr/X11R6/include -I/usr/include/freetype2 
 LIBRARY_FLAGS = -L/usr/X11R6/lib -lXft -lX11 -lfontconfig
 
@@ -13,7 +14,8 @@ log:
 
 client: log
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/r2k.o src/r2k.c 
-	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2k src/r2k.o src/log.o
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type.o src/type.c 
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2k src/r2k.o src/type.o src/log.o
 
 server: log
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/daemon.o src/daemon.c 
