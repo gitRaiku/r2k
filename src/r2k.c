@@ -694,11 +694,6 @@ void insert(const char *str, ssize_t n) {
 
 void type_selection() { /// TODO: Fuck you
   type_str(results[res_selected]);
-  /*char execString[512];
-  snprintf(execString, sizeof(execString), "/usr/local/bin/argToKp %s", results[res_selected]);
-  if (system(execString) == -1) {
-    log_format(6, stderr, "Could not call [%s]! %m\n", execString);
-  }*/
 }
 
 uint32_t mod(int32_t val, int32_t m) {

@@ -25,9 +25,7 @@ server: log
 install: client server
 	cp -f r2k /usr/local/bin/r2k
 	cp -f r2kd /usr/local/bin/r2kd
-	cp -f argToKp /usr/local/bin/argToKp
 
 uninstall:
 	rm -f /usr/local/bin/r2k
 	rm -f /usr/local/bin/r2kd
-	rm -f /usr/local/bin/argToKp
