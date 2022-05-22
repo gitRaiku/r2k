@@ -15,7 +15,7 @@ struct dictEntry {
 extern struct dictEntry *dict;
 extern uint32_t dictLen;
 
-#define DICTPATH "/home/raiku/Git/r2k/dict/RaikuDict"
+#define DICTPATH "/home/arch/Git/r2k/dict/RaikuDict"
 
 uint8_t dict_init();
 void dict_destroy();
