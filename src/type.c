@@ -139,7 +139,7 @@ uint8_t type_str(char *__restrict str) {
 
   mapping[OFF(width, fe, 0)] = 0;
   XChangeKeyboardMapping(dpy, fe + 8, width, mapping + OFF(width, fe, 0), 1);
-  XSync(dpy, True);
+  XSync(dpy, False);
 
   return 0;
 }
