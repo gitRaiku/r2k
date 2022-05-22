@@ -105,32 +105,33 @@ uint8_t type_str(char *__restrict str) {
   ev.keycode = 0;
   ev.same_screen = 0;
 
-  char fname[2] = "1\0";
-
-  // print_mapping(dpy, "0");
-
-  char a[10];
+  XSync(dpy, True);
+  XSync(dpy, True);
+  XSync(dpy, True);
   while (*str) {
     cl = runel(str);
 
-    strncpy(a, str, cl);
     uc = utf8_to_unicode(str, cl) | FUCK_YOU_XORG_WHY_DID_YOU_MAKE_ME_HAVE_TO_JUST_RANDOMLY_OR_WITH_THIS_RANDOM_BIT_JUST_SO_YOU_DONT_HAVE_PROBLEMS_WITH_OVERLAP_KILL_YOURSELF_NOW_BIT;
 
-    mapping[OFF(width, fe, 0)] = uc; //uc;
+    mapping[OFF(width, fe, 0)] = uc;
 
     XChangeKeyboardMapping(dpy, fe + 8, width, mapping + OFF(width, fe, 0), 1);
-
-    // print_mapping(dpy, fname);
-    ++fname[0];
+    XSync(dpy, True);
+    XSync(dpy, True);
+    XSync(dpy, True);
 
     ev.keycode = fe + 8;
 
     ev.type = KeyPress;
     XSendEvent(dpy, window, False, 0, (XEvent *) &ev);
+    XSync(dpy, True);
+    XSync(dpy, True);
+    XSync(dpy, True);
 
     ev.type = KeyRelease;
     XSendEvent(dpy, window, False, 0, (XEvent *) &ev);
-
+    XSync(dpy, True);
+    XSync(dpy, True);
     XSync(dpy, True);
 
     str += cl;
@@ -139,7 +140,6 @@ uint8_t type_str(char *__restrict str) {
   mapping[OFF(width, fe, 0)] = 0;
   XChangeKeyboardMapping(dpy, fe + 8, width, mapping + OFF(width, fe, 0), 1);
   XSync(dpy, True);
-  // print_mapping(dpy, fname);
 
   return 0;
 }
