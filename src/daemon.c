@@ -129,7 +129,11 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
   while (cl < bl) {
     if (buf[cl] == buf[cl+1]) {
       if (buf[cl] != 'a' && buf[cl] != 'e' && buf[cl] != 'i' && buf[cl] != 'o' && buf[cl] != 'u') {
-        str_append(romajiBuf, rl, "っ");
+        if (buf[cl] == 'n') {
+          str_append(romajiBuf, rl, "ん");
+        } else {
+          str_append(romajiBuf, rl, "っ");
+        }
         ++cl;
         continue;
       }
@@ -157,6 +161,20 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
         break;
       case 'k':
         switch (buf[cl+1]) {
+          case 'y':
+            switch (buf[cl+2]) {
+              case 'a':
+                str_append(romajiBuf, rl, "きゃ");
+                break;
+              case 'u':
+                str_append(romajiBuf, rl, "きゅ");
+                break;
+              case 'o':
+                str_append(romajiBuf, rl, "きょ");
+                break;
+            }
+            ++cl;
+            break;
           case 'a':
             str_append(romajiBuf, rl, "か");
             break;
@@ -172,9 +190,7 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "こ");
             break;
-          default:
-            break;
-        }    
+        }
         cl += 2;
         break;
       case 'g':
@@ -194,8 +210,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "ご");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
@@ -212,8 +226,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'o':
             str_append(romajiBuf, rl, "ちょ");
-            break;
-          default:
             break;
         }
         cl += 3;
@@ -235,8 +247,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
               case 'o':
                 str_append(romajiBuf, rl, "しょ");
                 break;
-              default:
-                break;
             }
             ++cl;
             break;
@@ -251,8 +261,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'o':
             str_append(romajiBuf, rl, "そ");
-            break;
-          default:
             break;
         }
         cl += 2;
@@ -270,8 +278,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'o':
             str_append(romajiBuf, rl, "ぞ");
-            break;
-          default:
             break;
         }
         cl += 2;
@@ -317,8 +323,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'u':
             str_append(romajiBuf, rl, "てぅ");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
@@ -342,8 +346,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'u':
             str_append(romajiBuf, rl, "でぅ");
-            break;
-          default:
             break;
         }
         cl += 2;
@@ -374,6 +376,20 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
         break;
       case 'h':
         switch (buf[cl+1]) {
+          case 'y':
+            switch (buf[cl + 2]) {
+              case 'o':
+                str_append(romajiBuf, rl, "ひょ");
+                break;
+              case 'u':
+                str_append(romajiBuf, rl, "ひゅ");
+                break;
+              case 'a':
+                str_append(romajiBuf, rl, "ひゃ");
+                break;
+            }
+            ++cl;
+            break;
           case 'a':
             str_append(romajiBuf, rl, "は");
             break;
@@ -385,8 +401,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'o':
             str_append(romajiBuf, rl, "ほ");
-            break;
-          default:
             break;
         }
         cl += 2;
@@ -408,8 +422,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "ぼ");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
@@ -430,8 +442,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "ぽ");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
@@ -442,8 +452,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'o':
             str_append(romajiBuf, rl, "ふぉ");
-            break;
-          default:
             break;
         }
         cl += 2;
@@ -465,8 +473,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "も");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
@@ -481,13 +487,25 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "よ");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
       case 'r':
         switch (buf[cl+1]) {
+          case 'y':
+            switch (buf[cl + 2]) {
+              case 'o':
+                str_append(romajiBuf, rl, "りょ");
+                break;
+              case 'u':
+                str_append(romajiBuf, rl, "りゅ");
+                break;
+              case 'a':
+                str_append(romajiBuf, rl, "りゃ");
+                break;
+            }
+            ++cl;
+            break;
           case 'a':
             str_append(romajiBuf, rl, "ら");
             break;
@@ -503,8 +521,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "ろ");
             break;
-          default:
-            break;
         }
         cl += 2;
         break;
@@ -515,8 +531,6 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             break;
           case 'o':
             str_append(romajiBuf, rl, "を");
-            break;
-          default:
             break;
         }
         cl += 2;
@@ -789,7 +803,7 @@ int32_t start_daemon(pid_t sid) {
 int main() {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
-  set_logging_level(0);
+  set_logging_level(10);
 
   pid = fork();
   if (pid < 0) {

@@ -13,7 +13,7 @@ const char *colors[SchemeLast][2] = {
 };
 
 const char *use_fonts[] = {
-        "JetBrainsMono:size=14"
+        "JetBrainsMono:size=16"
 };
 
 #endif //R2K_CONFIG_H
