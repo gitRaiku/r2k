@@ -120,7 +120,10 @@ uint8_t type_str(char *__restrict str) {
   while (*str) {
     cl = runel(str);
 
-    uc = utf8_to_unicode(str, cl) | FUCK_YOU_XORG_WHY_DID_YOU_MAKE_ME_HAVE_TO_JUST_RANDOMLY_OR_WITH_THIS_RANDOM_BIT_JUST_SO_YOU_DONT_HAVE_PROBLEMS_WITH_OVERLAP_KILL_YOURSELF_NOW_BIT;
+    uc = utf8_to_unicode(str, cl);
+    if (cl > 2) {
+      uc |= FUCK_YOU_XORG_WHY_DID_YOU_MAKE_ME_HAVE_TO_JUST_RANDOMLY_OR_WITH_THIS_RANDOM_BIT_JUST_SO_YOU_DONT_HAVE_PROBLEMS_WITH_OVERLAP_KILL_YOURSELF_NOW_BIT;
+    } 
 
     mapping[OFF(width, fe, 0)] = uc;
 

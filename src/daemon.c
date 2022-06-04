@@ -626,6 +626,7 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
   uint32_t ganal;
   uint64_t hash;
   uint32_t spos, epos;
+  uint32_t cl = 0;
 
   switch (function) {
     case FUNC_R2G:
@@ -652,39 +653,200 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
       break;
     case FUNC_R2D:
       log_string(0, "Romaji to dict\n", log_file);
-      r2g(buf+3, chlen, ganabuf, &ganal);
-      log_format(0, log_file, "Got hiragana %u:[%s]\n", ganal, ganabuf);
-      if (ganal == 1) {
-        make_empty_packet(response, rl);
-        log_string(0, "Couldn't create a hiragana transcription, sending back an empty packet!\n", log_file);
-        return;
+      switch (buf[3]) {
+#define PUSH_CHAR(ch)                    \
+          strcpy(response + 3 + cl, ch); \
+          cl += strlen(ch) + 1;          \
+          response[2 + cl] = '\n';
+        case 'S':
+          PUSH_CHAR("ß");
+          PUSH_CHAR("ß");
+          break;
+        case ':':
+          switch (buf[4]) {
+            case 'a':
+              PUSH_CHAR("ä");
+              PUSH_CHAR("Ä");
+              break;
+            case 'e':
+              PUSH_CHAR("ë");
+              PUSH_CHAR("Ë");
+              break;
+            case 'u':
+              PUSH_CHAR("ü");
+              PUSH_CHAR("Ü");
+              break;
+            case 'o':
+              PUSH_CHAR("ö");
+              PUSH_CHAR("Ö");
+              break;
+            case 'i':
+              PUSH_CHAR("ï");
+              PUSH_CHAR("Ï");
+              break;
+            default:
+              goto end;
+          }
+          break;
+        case ',':
+          switch (buf[4]) {
+            case 's':
+              PUSH_CHAR("ş");
+              PUSH_CHAR("Ş");
+              break;
+            case 't':
+              PUSH_CHAR("ţ");
+              PUSH_CHAR("Ţ");
+              break;
+            case 'c':
+              PUSH_CHAR("ç");
+              PUSH_CHAR("Ç");
+              break;
+            default:
+              goto end;
+          }
+          break;
+        case '^':
+          switch (buf[4]) {
+            case 'a':
+              PUSH_CHAR("â");
+              PUSH_CHAR("Â");
+              break;
+            case 'e':
+              PUSH_CHAR("ê");
+              PUSH_CHAR("Ê");
+              break;
+            case 'u':
+              PUSH_CHAR("û");
+              PUSH_CHAR("Û");
+              break;
+            case 'o':
+              PUSH_CHAR("ô");
+              PUSH_CHAR("Ô");
+              break;
+            case 'i':
+              PUSH_CHAR("î");
+              PUSH_CHAR("Î");
+              break;
+            default:
+              goto end;
+          }
+          break;
+        case '\'':
+          switch (buf[4]) {
+            case 'a':
+              PUSH_CHAR("á");
+              PUSH_CHAR("Á");
+              break;
+            case 'e':
+              PUSH_CHAR("é");
+              PUSH_CHAR("É");
+              break;
+            case 'u':
+              PUSH_CHAR("ú");
+              PUSH_CHAR("Ú");
+              break;
+            case 'o':
+              PUSH_CHAR("ó");
+              PUSH_CHAR("Ó");
+              break;
+            case 'i':
+              PUSH_CHAR("í");
+              PUSH_CHAR("Í");
+              break;
+            default:
+              goto end;
+          }
+          break;
+        case '`':
+          switch (buf[4]) {
+            case 'a':
+              PUSH_CHAR("à");
+              PUSH_CHAR("À");
+              break;
+            case 'e':
+              PUSH_CHAR("è");
+              PUSH_CHAR("È");
+              break;
+            case 'u':
+              PUSH_CHAR("ù");
+              PUSH_CHAR("Ù");
+              break;
+            case 'o':
+              PUSH_CHAR("ò");
+              PUSH_CHAR("Ò");
+              break;
+            case 'i':
+              PUSH_CHAR("ì");
+              PUSH_CHAR("Ì");
+              break;
+            default:
+              goto end;
+          }
+          break;
+        case '(':
+          switch (buf[4]) {
+            case 'a':
+              PUSH_CHAR("ă");
+              PUSH_CHAR("Ă");
+              break;
+            case 'e':
+              PUSH_CHAR("ĕ");
+              PUSH_CHAR("Ĕ");
+              break;
+            case 'u':
+              PUSH_CHAR("ŭ");
+              PUSH_CHAR("Ŭ");
+              break;
+            case 'o':
+              PUSH_CHAR("ŏ");
+              PUSH_CHAR("Ŏ");
+              break;
+            case 'i':
+              PUSH_CHAR("ĭ");
+              PUSH_CHAR("Ĭ");
+              break;
+            default:
+              goto end;
+          }
+          break;
+#undef PUSH_CHAR
+        default:
+          r2g(buf+3, chlen, ganabuf, &ganal);
+          log_format(0, log_file, "Got hiragana %u:[%s]\n", ganal, ganabuf);
+          if (ganal == 1) {
+            make_empty_packet(response, rl);
+            log_string(0, "Couldn't create a hiragana transcription, sending back an empty packet!\n", log_file);
+            return;
+          }
+          hash = stringToHash(ganabuf);
+          log_format(0, log_file, "Got hash: %lu\n", hash);
+          get_dict(hash, &spos, &epos);
+          int32_t i;
+
+          strcpy(response+3, dict[spos].mana);
+          cl += strlen(dict[spos].mana) + 1;
+          response[2+cl] = '\n';
+
+          strcpy(response+3+cl, ganabuf);
+          cl += strlen(ganabuf) + 1;
+          response[2+cl] = '\n';
+
+          for(i = spos + 1; i < epos; ++i) {
+            strcpy(response+3+cl, dict[i].mana);
+            cl += strlen(dict[i].mana) + 1;
+            response[2+cl] = '\n';
+          }
+
+          uint32_t kl;
+          hash_to_kata(hash, response+3+cl, &kl);
+          cl += kl + 1;
+          response[2+cl] = '\n';
+          response[3+cl] = '\0';
+          break;
       }
-      hash = stringToHash(ganabuf);
-      log_format(0, log_file, "Got hash: %lu\n", hash);
-      get_dict(hash, &spos, &epos);
-      int32_t i;
-      uint32_t cl = 0;
 
-      strcpy(response+3, dict[spos].mana);
-      cl += strlen(dict[spos].mana) + 1;
-      response[2+cl] = '\n';
-
-      strcpy(response+3+cl, ganabuf);
-      cl += strlen(ganabuf) + 1;
-      response[2+cl] = '\n';
-
-      for(i = spos + 1; i < epos; ++i) {
-        strcpy(response+3+cl, dict[i].mana);
-        cl += strlen(dict[i].mana) + 1;
-        response[2+cl] = '\n';
-      }
-
-      uint32_t kl;
-      hash_to_kata(hash, response+3+cl, &kl);
-      cl += kl + 1;
-      response[2+cl] = '\n';
-      response[3+cl] = '\0';
-
+end:;
       log_format(0, log_file, "%u: [%s]\n", cl, response+3);
       response[0] = 0b11;
       response[1] = cl & 0xFF00;
