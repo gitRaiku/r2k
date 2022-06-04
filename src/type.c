@@ -66,6 +66,17 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
   return res;
 }
 
+/// TODO: What the fuck
+#define SPAM_SYNC \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True)
+
 uint8_t type_str(char *__restrict str) {
   Display *dpy;
   dpy = XOpenDisplay(NULL);
@@ -105,9 +116,7 @@ uint8_t type_str(char *__restrict str) {
   ev.keycode = 0;
   ev.same_screen = 0;
 
-  XSync(dpy, True);
-  XSync(dpy, True);
-  XSync(dpy, True);
+  SPAM_SYNC;
   while (*str) {
     cl = runel(str);
 
@@ -116,23 +125,17 @@ uint8_t type_str(char *__restrict str) {
     mapping[OFF(width, fe, 0)] = uc;
 
     XChangeKeyboardMapping(dpy, fe + 8, width, mapping + OFF(width, fe, 0), 1);
-    XSync(dpy, True);
-    XSync(dpy, True);
-    XSync(dpy, True);
+    SPAM_SYNC;
 
     ev.keycode = fe + 8;
 
     ev.type = KeyPress;
     XSendEvent(dpy, window, False, 0, (XEvent *) &ev);
-    XSync(dpy, True);
-    XSync(dpy, True);
-    XSync(dpy, True);
+    SPAM_SYNC;
 
     ev.type = KeyRelease;
     XSendEvent(dpy, window, False, 0, (XEvent *) &ev);
-    XSync(dpy, True);
-    XSync(dpy, True);
-    XSync(dpy, True);
+    SPAM_SYNC;
 
     str += cl;
   }
