@@ -77,6 +77,32 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
     XSync(dpy, True); \
     XSync(dpy, True)
 
+uint32_t char_to_uc(char *str, uint32_t cl) { /// TODO: Make uppercase letters work
+                                              /// TODO: Fuck Xorg
+  uint32_t uc = 0;
+  uc = utf8_to_unicode(str, cl);
+  switch (uc) {
+    case 0x015E: // Ş
+      uc = 0x01aa;
+      break;
+    case 0x015F: // ş
+      uc = 0x01ba;
+      break;
+    case 0x0102: // Ă
+      uc = 0x01c3;
+      break;
+    case 0x0103: // ă
+      uc = 0x01e3;
+      break;
+    default:
+      if (cl > 2) {
+        uc |= FUCK_YOU_XORG_WHY_DID_YOU_MAKE_ME_HAVE_TO_JUST_RANDOMLY_OR_WITH_THIS_RANDOM_BIT_JUST_SO_YOU_DONT_HAVE_PROBLEMS_WITH_OVERLAP_KILL_YOURSELF_NOW_BIT;
+      }
+      break;
+  }
+  return uc;
+}
+
 uint8_t type_str(char *__restrict str) {
   Display *dpy;
   dpy = XOpenDisplay(NULL);
@@ -120,10 +146,9 @@ uint8_t type_str(char *__restrict str) {
   while (*str) {
     cl = runel(str);
 
-    uc = utf8_to_unicode(str, cl);
-    if (cl > 2) {
-      uc |= FUCK_YOU_XORG_WHY_DID_YOU_MAKE_ME_HAVE_TO_JUST_RANDOMLY_OR_WITH_THIS_RANDOM_BIT_JUST_SO_YOU_DONT_HAVE_PROBLEMS_WITH_OVERLAP_KILL_YOURSELF_NOW_BIT;
-    } 
+    uc = char_to_uc(str, cl);
+    fprintf(stdout, "s: %s\n", str);
+    fprintf(stdout, "uc: %u\n", uc);
 
     mapping[OFF(width, fe, 0)] = uc;
 
