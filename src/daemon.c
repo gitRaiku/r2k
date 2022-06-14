@@ -366,6 +366,10 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
         break;
       case 'n':
         switch (buf[cl+1]) {
+          case '\\':
+            str_append(romajiBuf, rl, "ん");
+            --cl;
+            break;
           case 'a':
             str_append(romajiBuf, rl, "な");
             break;
