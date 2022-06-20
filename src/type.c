@@ -75,6 +75,42 @@ uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
     XSync(dpy, True); \
     XSync(dpy, True); \
     XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
+    XSync(dpy, True); \
     XSync(dpy, True)
 
 uint32_t char_to_uc(char *str, uint32_t cl) { /// TODO: Make uppercase letters work
