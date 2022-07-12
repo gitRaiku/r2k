@@ -445,6 +445,20 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
         break;
       case 'p':
         switch (buf[cl+1]) {
+          case 'y':
+            switch (buf[cl+2]) {
+              case 'a':
+                str_append(romajiBuf, rl, "ぴゃ");
+                break;
+              case 'u':
+                str_append(romajiBuf, rl, "ぴゅ");
+                break;
+              case 'o':
+                str_append(romajiBuf, rl, "ぴょ");
+                break;
+            }
+            ++cl;
+            break;
           case 'a':
             str_append(romajiBuf, rl, "ぱ");
             break;
