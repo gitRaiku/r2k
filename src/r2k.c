@@ -927,7 +927,7 @@ int main(int argc, char **argv) {
 
   keyboard_grab(drw->dpy);
 
-  /*strcpy(text, "jisho");
+  /*strcpy(text, ". ");
   update_results();
   {
     int32_t i;

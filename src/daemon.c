@@ -370,6 +370,20 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
             str_append(romajiBuf, rl, "ん");
             --cl;
             break;
+          case 'y':
+            switch (buf[cl + 2]) {
+              case 'o':
+                str_append(romajiBuf, rl, "にょ");
+                break;
+              case 'u':
+                str_append(romajiBuf, rl, "にゅ");
+                break;
+              case 'a':
+                str_append(romajiBuf, rl, "にゃ");
+                break;
+            }
+            ++cl;
+            break;
           case 'a':
             str_append(romajiBuf, rl, "な");
             break;
@@ -840,6 +854,54 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
               break;
             default:
               goto end;
+          }
+          break;
+        case '.':
+          switch (buf[4]) {
+            case '(':
+            case '[':
+            case '{':
+              PUSH_CHAR("【");
+              PUSH_CHAR("｛");
+              PUSH_CHAR("［");
+              PUSH_CHAR("（");
+              break;
+            case ')':
+            case ']':
+            case '}':
+              PUSH_CHAR("】");
+              PUSH_CHAR("｝");
+              PUSH_CHAR("］");
+              PUSH_CHAR("）");
+              break;
+            case ',':
+              PUSH_CHAR("、");
+              break;
+            case '.':
+              PUSH_CHAR("　");
+              break;
+            case '\'':
+              PUSH_CHAR("「");
+              PUSH_CHAR("」");
+              break;
+            case '\"':
+              PUSH_CHAR("『");
+              PUSH_CHAR("』");
+              PUSH_CHAR("〝");
+              PUSH_CHAR("〟");
+              break;
+            case '~':
+              PUSH_CHAR("〜");
+              break;
+            case '-':
+              PUSH_CHAR("ー");
+              break;
+            case 'M':
+              PUSH_CHAR("♪");
+              break;
+            default:
+              PUSH_CHAR("。");
+              break;
           }
           break;
 #undef PUSH_CHAR
