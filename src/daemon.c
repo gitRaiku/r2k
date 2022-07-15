@@ -241,6 +241,9 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
           case 'o':
             str_append(romajiBuf, rl, "ちょ");
             break;
+          case 'e':
+            str_append(romajiBuf, rl, "ちぇ");
+            break;
         }
         cl += 3;
         break;
