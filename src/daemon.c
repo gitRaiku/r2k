@@ -916,6 +916,12 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
             case 'M':
               PUSH_CHAR("♪");
               break;
+            case '!':
+              PUSH_CHAR("！");
+              break;
+            case '?':
+              PUSH_CHAR("？");
+              break;
             default:
               PUSH_CHAR("。");
               break;
