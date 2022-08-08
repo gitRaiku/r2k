@@ -159,6 +159,10 @@ void r2g(char *__restrict buf, uint32_t bl, char *__restrict romajiBuf, uint32_t
         str_append(romajiBuf, rl, "お");
         ++cl;
         break;
+      case '-':
+        str_append(romajiBuf, rl, "ー");
+        ++cl;
+        break;
       case 'k':
         switch (buf[cl+1]) {
           case 'y':
