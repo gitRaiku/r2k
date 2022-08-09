@@ -27,7 +27,7 @@ You can add a ー anywhere in a string with a dash ``-``.
 
 You can also write accented vowels by writing the accent and then the vowel, eg. ``:o`` -> ö.
 
-Certain other characters are also available by starting with a ``.`` followed by brackets, tildas or punctuation marks. Some exceptions being that ``..`` becomes a full width space and ``.M``turns into a music note ``♪``.
+Certain other characters are also available by starting with a ``.`` followed by brackets, tildas or punctuation marks. Some exceptions being that ``..`` becomes a full width space and ``.M``turns into a music note ``♪``. You can also type ß with a capital s ``S``.
 
 ## Inspiration
 
