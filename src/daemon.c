@@ -901,6 +901,9 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
             case '.':
               PUSH_CHAR("　");
               break;
+            case '*':
+              PUSH_CHAR("・");
+              break;
             case '\'':
               PUSH_CHAR("「");
               PUSH_CHAR("」");
