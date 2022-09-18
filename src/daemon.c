@@ -886,6 +886,7 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
               PUSH_CHAR("｛");
               PUSH_CHAR("［");
               PUSH_CHAR("（");
+              PUSH_CHAR("「");
               break;
             case ')':
             case ']':
@@ -894,6 +895,7 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
               PUSH_CHAR("｝");
               PUSH_CHAR("］");
               PUSH_CHAR("）");
+              PUSH_CHAR("」");
               break;
             case ',':
               PUSH_CHAR("、");
