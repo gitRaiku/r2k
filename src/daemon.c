@@ -298,6 +298,16 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
               goto end;
           }
           break;
+        case '*':
+          switch (buf[4]) {
+            case 'a':
+              PUSH_CHAR("å");
+              PUSH_CHAR("Å");
+              break;
+            default:
+              goto end;
+          }
+          break;
         case ',':
           switch (buf[4]) {
             case 's':
