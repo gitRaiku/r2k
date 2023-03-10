@@ -28,7 +28,7 @@ void read_uint32_t(FILE *__restrict stream, uint32_t *__restrict nr) {
 
 uint8_t dict_init() {
   dictLen = 0;
-  dict = calloc(202000, sizeof(struct dictEntry));
+  dict = calloc(DICT_ENTRIES, sizeof(struct dictEntry));
 
 
   { // TODO: Improve this

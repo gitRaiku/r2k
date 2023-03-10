@@ -3,7 +3,7 @@
 import xml.etree.ElementTree as ET
 from operator import itemgetter
 
-dic = open('/home/raiku/Git/r2k/dict/RaikuDict', 'w', encoding='utf-8')
+dic = open('/home/arch/Git/r2k/dict/RaikuDict', 'w', encoding='utf-8')
 # bad = open('/home/raiku/temp/RaikuDictLong', 'w', encoding='utf-8')
 
 wbuf = []
@@ -42,7 +42,7 @@ conv = { 'ぁ': 0b0000001, 'あ': 0b0000010, 'ぃ': 0b0000011, 'い': 0b0000100,
          'ら': 0b1001001, 'り': 0b1001010, 'る': 0b1001011, 'れ': 0b1001100, 'ろ': 0b1001101, 'わ': 0b1001110,
          'を': 0b1001111, 'ん': 0b1010000, 'ー': 0b1010001, 'ゎ': 0b1010010, 'ゐ': 0b1010011, 'ゑ': 0b1010100,
          'ゕ': 0b1010101, 'ゖ': 0b1010110, 'ゔ': 0b1010111, 'ゝ': 0b1011000, 'ゞ': 0b1011001, '・': 0b1011010,
-         '「': 0b1011011, '」': 0b1011100, '。': 0b1011101, '、': 0b1011110 }
+         '「': 0b1011011, '」': 0b1011100, '。': 0b1011101, '、': 0b1011110,  'ﾀ': 0b1011111,  'ﾋ': 0b1100000}
 
 fd = { 'ぁ': 'あ', 'ぃ': 'い', 'ぅ': 'う', 'ぇ': 'え', 'ぉ': 'お', 'ゎ': 'あ',
        'あ': 'あ', 'い': 'い', 'う': 'う', 'え': 'え', 'お': 'お', 'か': 'あ',
@@ -87,7 +87,7 @@ def fix_rebs(rebs):
     return list(dict.fromkeys(rebs))
 
 def main():
-    tree = ET.parse('/home/raiku/Git/r2k/dict/JMdict_e.xml')
+    tree = ET.parse('/usr/share/ankee/JMdict_e.xml')
     root = tree.getroot()
     l = root.__len__()
     print("Loaded dict!")

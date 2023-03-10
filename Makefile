@@ -18,6 +18,7 @@ client: log
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2k src/r2k.o src/type.o src/log.o
 
 server: log
+	./update_defs
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/daemon.o src/daemon.c 
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/dict.o src/dict.c
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2kd src/daemon.o src/dict.o src/log.o
