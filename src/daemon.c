@@ -562,7 +562,7 @@ end:;
   }
 }
  
-int32_t start_daemon(pid_t sid) {
+int32_t start_daemon() {
   if (dict_init()) {
     log_format(10, log_file, "Could not initialize the dictionary at path %s!\n", DICTPATH);
     return 1;
@@ -667,6 +667,7 @@ int main() {
   setlocale(LC_ALL, "");
   set_logging_level(10);
 
+  pid = 0;
   pid = fork();
   if (pid < 0) {
     exit(EXIT_FAILURE);
@@ -701,7 +702,7 @@ int main() {
 
   int32_t exit_code;
 
-  exit_code = start_daemon(sid);
+  exit_code = start_daemon();
 
   log_format(exit_code, log_file, "Exited with code %i\n", exit_code);
   fclose(log_file);

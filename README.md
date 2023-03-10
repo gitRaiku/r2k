@@ -4,8 +4,6 @@ A simple romaji to kana input method for the X11 window system based on the [JMD
 
 ## Build and installation
 
-To configure the correct dictionary path change it in ./src/dict.h
-
 ```sh
 make # For simply building the project
 sudo make install # For also installing the binaries
