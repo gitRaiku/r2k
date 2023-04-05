@@ -664,6 +664,7 @@ void setup() {
 
   drw_resize(mw, mh);
   drawmenu();
+  wlstart();
 }
 
 size_t nextrune(int32_t inc) {
@@ -692,7 +693,8 @@ void insert(const char *str, ssize_t n) {
   print_buf();
 }
 
-void type_selection() { /// TODO: Fuck you
+void type_selection() {
+  cleanup();
   type_str(results[res_selected]);
 }
 
@@ -939,6 +941,7 @@ int main(int argc, char **argv) {
   setup();
   run();
 
+  wlend();
   shutdown_server_connection();
   return 0;
 }
