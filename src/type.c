@@ -15,7 +15,7 @@ void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) 
   int32_t i;
   
 	char fname[] = "/tmp/r2ktype-XXXXXX";
-  uint32_t fd;
+  int32_t fd;
 	WLCHECK((fd=mkstemp(fname))>=0,"Failed creating the unnecessary external XKB keymap file for Wayland since it decided to use XKB? Why did it use XKB? Could it not have chosen something else? Is it really that hard to make a simpler protocol? Why do i have to bash my head against this X brick wall again? I thought i'd get rid of the problems of X by switching to Wayland, why have they returned?");
 	unlink(fname);
 	FILE *__restrict f = fdopen(fd, "w");
@@ -43,6 +43,13 @@ void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) 
 }
 
 uint8_t type_str(char *__restrict str) {
+
+  char ba[1024];
+  snprintf(ba, sizeof(ba), "echo \"%s\" | wl-copy", str);
+  system(ba);
+  return 0;
+
+
   wchar_t a[1024];
   int32_t i;
   uint32_t al = mbstowcs(a, str, strlen(str));

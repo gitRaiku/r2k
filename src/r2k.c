@@ -630,8 +630,8 @@ void setup() {
     die(1);
   }
 
-  x = 0;
-  y = 0;
+  x = -1;
+  y = -1;
   mw = wa.width;
 
   swa.override_redirect = True;
@@ -641,13 +641,18 @@ void setup() {
             CWOverrideRedirect | CWBackPixel | CWEventMask, &swa);
   XSetClassHint(drw->dpy, win, &ch);
 
+  XSizeHints sh = {0};
+  sh.flags = PMinSize | PMaxSize;
+  sh.min_width = sh.max_width = mw;
+  sh.min_height = sh.max_height = mh;
+  XSetWMNormalHints(drw->dpy, win, &sh);
+
   if ((xim = XOpenIM(drw->dpy, NULL, NULL, NULL)) == NULL) {
     log_string(10, "XOpenIM failed: Could not open input device!\n", stderr);
     die(1);
   }
 
-  xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, win, XNFocusWindow, win,
-          NULL);
+  xic = XCreateIC(xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, win, XNFocusWindow, win, NULL);
 
   XMapRaised(drw->dpy, win);
 
