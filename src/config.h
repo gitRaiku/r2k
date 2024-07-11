@@ -7,9 +7,15 @@ enum {
 
 const char *colors[SchemeLast][2] = {
         /*     fg         bg       */
-        [SchemeNorm] = {"#a6c2e8", "#090408"},
+        /*[SchemeNorm] = {"#a6c2e8", "#090408"},
         [SchemeSel]  = {"#a6c2e8", "#99210A"},
-        [SchemeOut]  = {"#a6c2e8", "#3147C7"},
+        [SchemeOut]  = {"#a6c2e8", "#3147C7"},*/
+
+        [SchemeNorm] = {"#bbb8c0", "#151717"},
+        [SchemeSel]  = {"#111513", "#936ab0"},
+        [SchemeOut]  = {"#111513", "#936ab0"},
+
+        //[SchemeOut]  = {"#a6c2e8", "#3147C7"},
 };
 
 const char *use_fonts[] = {

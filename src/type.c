@@ -20,21 +20,28 @@ void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) 
 	unlink(fname);
 	FILE *__restrict f = fdopen(fd, "w");
 
-	fprintf(f,"xkb_keymap {\nxkb_keycodes \"(unnamed)\" {\nminimum = 8;\nmaximum = %u;\n", sl + 8 + 1);
-	for (i = 1; i <= sl; ++i) {
+	fprintf(f,"xkb_keymap {\nxkb_keycodes \"Raiku\" {\nminimum = 8;\nmaximum = %u;\n", sl + 8 + 1);
+	fprintf(stdout,"xkb_keymap {\nxkb_keycodes \"Raiku\" {\nminimum = 8;\nmaximum = %u;\n", sl + 8 + 1);
+	for (i = 1; i <= sl + 1; ++i) {
 		fprintf(f, "<K%u> = %u;\n", i, i + 8);
+		fprintf(stdout, "<K%u> = %u;\n", i, i + 8);
 	}
-	fprintf(f, "};\nxkb_types \"(unnamed)\" { include \"complete\" };\nxkb_compatibility \"(unnamed)\" { include \"complete\" };\nxkb_symbols \"(unnamed)\" {\n");
+	fprintf(f, "};\nxkb_types \"Raiku\" { include \"complete\" };\nxkb_compatibility \"Raiku\" { include \"complete\" };\nxkb_symbols \"Raiku\" {\n");
+	fprintf(stdout, "};\nxkb_types \"Raiku\" { include \"complete\" };\nxkb_compatibility \"Raiku\" { include \"complete\" };\nxkb_symbols \"Raiku\" {\n");
 
   {
     char sn[256];
+    fprintf(f, "key <K1> {[NoSymbol]};\n");
+    fprintf(stdout, "key <K1> {[NoSymbol]};\n");
     for (i = 0; i < sl; ++i) {
       WLCHECK(xkb_keysym_get_name(kmap[i], sn, sizeof(sn)),"Could not retrieve xkb symbol name for something, idk!");
-      fprintf(f, "key <K%u> {[%s]};\n", i + 1, sn);
+      fprintf(f, "key <K%u> {[%s]};\n", i + 2, sn);
+      fprintf(stdout, "key <K%u> {[%s]};\n", i + 2, sn);
     }
   }
 
 	fputs("};\n};\n", f);
+	fputs("};\n};\n", stdout);
 	fflush(f);
 
 	zwp_virtual_keyboard_v1_keymap(state.kb, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, fd, ftell(f));
@@ -43,12 +50,14 @@ void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) 
 }
 
 uint8_t type_str(char *__restrict str) {
-
+  /*
   char ba[1024];
   snprintf(ba, sizeof(ba), "echo \"%s\" | wl-copy", str);
-  system(ba);
+  if (system(ba)) {
+    fprintf(stderr, "Error copying\n");
+  }
   return 0;
-
+  */
 
   wchar_t a[1024];
   int32_t i;
@@ -61,12 +70,14 @@ uint8_t type_str(char *__restrict str) {
   fprintf(stdout, "Typing %s\n", str);
   ckmap(a, kmap, al);
   
-  for(i = 1; i <= al; ++i) {
-    zwp_virtual_keyboard_v1_key(state.kb, 0, i, WL_KEYBOARD_KEY_STATE_PRESSED);
-    zwp_virtual_keyboard_v1_key(state.kb, 0, i, WL_KEYBOARD_KEY_STATE_RELEASED);
-  }
+  zwp_virtual_keyboard_v1_key(state.kb, 0, 1, WL_KEYBOARD_KEY_STATE_PRESSED); wl_display_roundtrip(state.dpy);
+  zwp_virtual_keyboard_v1_key(state.kb, 0, 1, WL_KEYBOARD_KEY_STATE_RELEASED); wl_display_roundtrip(state.dpy);
 
-	wl_display_roundtrip(state.dpy);
+  struct timespec ts = { .tv_sec = 0, .tv_nsec = 10000000  };
+  for(i = 2; i <= al + 1; ++i) {
+    zwp_virtual_keyboard_v1_key(state.kb, 0, i, WL_KEYBOARD_KEY_STATE_PRESSED); wl_display_roundtrip(state.dpy);
+    zwp_virtual_keyboard_v1_key(state.kb, 0, i, WL_KEYBOARD_KEY_STATE_RELEASED); wl_display_roundtrip(state.dpy);
+  }
 
   return 0;
 }
