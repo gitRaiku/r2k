@@ -2,7 +2,7 @@
 
 A simple romaji to kana input method for the wayland window system based on the [JMDict dictionary](http://jmdict.org/).
 
-![r2k](https://user-images.githubusercontent.com/59704655/233614419-b593fb0f-7727-4281-8cf9-a21a5efbfcb8.png)
+![r2k](https://raw.githubusercontent.com/gitRaiku/r2k/wayland/r2k.png)
 
 ## Build and installation
 
