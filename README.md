@@ -2,6 +2,11 @@
 
 A simple romaji to kana input method for the X11 window system based on the [JMDict dictionary](http://jmdict.org/).
 
+A wayland version of this project can be found on the [Wayland branch](https://github.com/gitRaiku/r2k/tree/wayland).
+
+![r2k](https://raw.githubusercontent.com/gitRaiku/r2k/wayland/r2k.png)
+
+
 ## Build and installation
 
 ```sh
