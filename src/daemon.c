@@ -201,7 +201,7 @@ void hash_to_kata(uint64_t hash, char *kata, uint32_t *kl) {
   int64_t cpos = 57;
   char *cglyph;
   while (cpos > 0) {
-    fprintf(stdout, "%lu: %lu %lu %lu %lu\n", cpos, hash, 0x7Flu << cpos, hash & (0x7Flu << cpos), (hash & (0x7Flu << cpos)) >> cpos);
+    //fprintf(stdout, "%lu: %lu %lu %lu %lu\n", cpos, hash, 0x7Flu << cpos, hash & (0x7Flu << cpos), (hash & (0x7Flu << cpos)) >> cpos);
     cglyph = hashToKata[(hash & (0x7Flu << cpos)) >> cpos];
     if (cglyph == *hashToKata) {
       break;
@@ -229,7 +229,7 @@ void interpret_data(char *buf, int32_t len, char *response, uint32_t *rl) {
   if (chlen + 3 != len) {
     log_format(0, log_file, "Length mismatch! Got %i, expected %hu\n", len, chlen + 3);
     make_empty_packet(response, rl);
-    hexprint(buf, len);
+    //hexprint(buf, len);
   }
 
   char ganabuf[512] = {0};
@@ -579,7 +579,7 @@ end:;
       break;
     default:
       log_string(1, "Got broken packet! Sending empty packet pack!\n", log_file);
-      hexprint(buf, len);
+      //hexprint(buf, len);
       make_empty_packet(response, rl);
       break;
 
@@ -588,7 +588,7 @@ end:;
  
 int32_t start_daemon() {
   if (dict_init()) {
-    log_format(10, log_file, "Could not initialize the dictionary at path %s!\n", DICTPATH);
+    log_format(10, log_file, "Could not initialize the dictionary at path %s or %s!\n", DICTPATH1, DICTPATH2);
     return 1;
   }
 
@@ -689,6 +689,7 @@ int32_t start_daemon() {
 int main() {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
+  log_string(10, "All logging will be done to /var/log/r2k.log!\n", stdout);
   set_logging_level(10);
 
   pid = 0;

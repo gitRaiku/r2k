@@ -9,9 +9,8 @@ DATE := $(shell date "+%Y-%m-%d")
 # COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
 COMPILE_FLAGS = -Ofast -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
 INCLUDE_FLAGS = -I/usr/X11R6/include -I/usr/include/freetype2 
-LIBRARY_FLAGS = -L/usr/X11R6/lib -lXft -lX11 -lfontconfig -lxkbcommon -lwayland-client
-
 KB_PROTOCOL = virtual-keyboard-unstable-v1.xml
+LIBRARY_FLAGS := -L/usr/X11R6/lib -lXft -lX11 -lfontconfig -lxkbcommon
 
 REQ_XORG = $(shell grep 'TYPE_XORG' src/config.h | tail -c 2)
 ifeq ($(REQ_XORG),1)
@@ -22,10 +21,12 @@ endif
 
 REQ_WL = $(shell grep 'TYPE_WL' src/config.h | tail -c 2)
 ifeq ($(REQ_WL),1)
+	LIBRARY_FLAGS := $(LIBRARY_FLAGS) -lwayland-client
 REQ_WL = src/type-wl.o protocol/kb-protocol.o
 else
 REQ_WL = 
 endif
+
 
 protocol/kb-protocol.c: protocol/virtual-keyboard-unstable-v1.xml
 	wayland-scanner private-code < protocol/virtual-keyboard-unstable-v1.xml > protocol/kb-protocol.c
@@ -52,7 +53,6 @@ client: src/log.o src/r2k.o $(REQ_WL) $(REQ_XORG)
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2k src/r2k.o $(REQ_WL) $(REQ_XORG) src/log.o 
 
 src/daemon.o: src/daemon.c
-	./update_defs
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/daemon.o src/daemon.c 
 
 src/dict.o: src/dict.c
@@ -65,6 +65,8 @@ debug: client
 	gdb -q r2k
 
 install: client server
+	mkdir -p /usr/local/share/r2k/
+	cp -f dict/RaikuDict /usr/local/share/r2k/r2kdict
 	cp -f r2k /usr/local/bin/r2k
 	cp -f r2kd /usr/local/bin/r2kd
 

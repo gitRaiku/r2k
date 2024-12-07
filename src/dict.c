@@ -30,14 +30,14 @@ uint8_t dict_init() {
   dictLen = 0;
   dict = calloc(DICT_ENTRIES, sizeof(struct dictEntry));
 
-
-  { // TODO: Improve this
-    int32_t fd = open(DICTPATH, O_RDONLY);
+  {
+    int32_t fd = open(DICTPATH1, O_RDONLY);
     if (fd == -1) {
-      /// TODO: Kms
-      /*log_string(10, log_file, "Could not find the dictionary file at %s! [%m]\n", DICTPATH);*/
-      dict_destroy();
-      return 1;
+      fd = open(DICTPATH2, O_RDONLY);
+      if (fd == -1) {
+        dict_destroy();
+        return 1;
+      }
     }
 
     char buf[1024];
