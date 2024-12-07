@@ -1,4 +1,4 @@
-#include "type.h"
+#include "type-wl.h"
 
 struct cstate {
 	struct wl_display *__restrict dpy;
@@ -11,7 +11,10 @@ struct cstate {
 struct cstate state;
 #define WLCHECK(x,e) {if(!(x)){fputs("Error running " #x " " e "\n", stderr); exit(1);}}
 
-void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) {
+static void wlstart();
+static void wlend();
+
+static void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) {
   int32_t i;
   
 	char fname[] = "/tmp/r2ktype-XXXXXX";
@@ -21,27 +24,27 @@ void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) 
 	FILE *__restrict f = fdopen(fd, "w");
 
 	fprintf(f,"xkb_keymap {\nxkb_keycodes \"Raiku\" {\nminimum = 8;\nmaximum = %u;\n", sl + 8 + 1);
-	fprintf(stdout,"xkb_keymap {\nxkb_keycodes \"Raiku\" {\nminimum = 8;\nmaximum = %u;\n", sl + 8 + 1);
+	log_format(0, stdout,"xkb_keymap {\nxkb_keycodes \"Raiku\" {\nminimum = 8;\nmaximum = %u;\n", sl + 8 + 1);
 	for (i = 1; i <= sl + 1; ++i) {
 		fprintf(f, "<K%u> = %u;\n", i, i + 8);
-		fprintf(stdout, "<K%u> = %u;\n", i, i + 8);
+		log_format(0, stdout, "<K%u> = %u;\n", i, i + 8);
 	}
 	fprintf(f, "};\nxkb_types \"Raiku\" { include \"complete\" };\nxkb_compatibility \"Raiku\" { include \"complete\" };\nxkb_symbols \"Raiku\" {\n");
-	fprintf(stdout, "};\nxkb_types \"Raiku\" { include \"complete\" };\nxkb_compatibility \"Raiku\" { include \"complete\" };\nxkb_symbols \"Raiku\" {\n");
+	log_format(0, stdout, "};\nxkb_types \"Raiku\" { include \"complete\" };\nxkb_compatibility \"Raiku\" { include \"complete\" };\nxkb_symbols \"Raiku\" {\n");
 
   {
     char sn[256];
     fprintf(f, "key <K1> {[NoSymbol]};\n");
-    fprintf(stdout, "key <K1> {[NoSymbol]};\n");
+    log_format(0, stdout, "key <K1> {[NoSymbol]};\n");
     for (i = 0; i < sl; ++i) {
       WLCHECK(xkb_keysym_get_name(kmap[i], sn, sizeof(sn)),"Could not retrieve xkb symbol name for something, idk!");
       fprintf(f, "key <K%u> {[%s]};\n", i + 2, sn);
-      fprintf(stdout, "key <K%u> {[%s]};\n", i + 2, sn);
+      log_format(0, stdout, "key <K%u> {[%s]};\n", i + 2, sn);
     }
   }
 
 	fputs("};\n};\n", f);
-	fputs("};\n};\n", stdout);
+	log_format(0, stdout, "};\n};\n");
 	fflush(f);
 
 	zwp_virtual_keyboard_v1_keymap(state.kb, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, fd, ftell(f));
@@ -49,16 +52,8 @@ void ckmap(wchar_t *__restrict str, xkb_keysym_t *__restrict kmap, uint32_t sl) 
   fclose(f);
 }
 
-uint8_t type_str(char *__restrict str) {
-  /*
-  char ba[1024];
-  snprintf(ba, sizeof(ba), "echo \"%s\" | wl-copy", str);
-  if (system(ba)) {
-    fprintf(stderr, "Error copying\n");
-  }
-  return 0;
-  */
-
+uint8_t type_str_wl(char *__restrict str) {
+  wlstart();
   wchar_t a[1024];
   int32_t i;
   uint32_t al = mbstowcs(a, str, strlen(str));
@@ -67,22 +62,23 @@ uint8_t type_str(char *__restrict str) {
     kmap[i] = xkb_utf32_to_keysym(a[i]);
   }
 
-  fprintf(stdout, "Typing %s\n", str);
+  log_format(0, stdout, "Typing %s\n", str);
   ckmap(a, kmap, al);
   
   zwp_virtual_keyboard_v1_key(state.kb, 0, 1, WL_KEYBOARD_KEY_STATE_PRESSED); wl_display_roundtrip(state.dpy);
   zwp_virtual_keyboard_v1_key(state.kb, 0, 1, WL_KEYBOARD_KEY_STATE_RELEASED); wl_display_roundtrip(state.dpy);
 
-  struct timespec ts = { .tv_sec = 0, .tv_nsec = 10000000  };
   for(i = 2; i <= al + 1; ++i) {
     zwp_virtual_keyboard_v1_key(state.kb, 0, i, WL_KEYBOARD_KEY_STATE_PRESSED); wl_display_roundtrip(state.dpy);
     zwp_virtual_keyboard_v1_key(state.kb, 0, i, WL_KEYBOARD_KEY_STATE_RELEASED); wl_display_roundtrip(state.dpy);
   }
 
+  wlend();
+
   return 0;
 }
 
-void eventhand(void *__restrict data, struct wl_registry *__restrict reg,
+static void eventhand(void *__restrict data, struct wl_registry *__restrict reg,
 							        uint32_t name, const char *__restrict iface,
 							        uint32_t version) {
 	struct cstate *__restrict state = data;
@@ -93,14 +89,14 @@ void eventhand(void *__restrict data, struct wl_registry *__restrict reg,
 	}
 }
 
-void eventremhand(void *data, struct wl_registry *registry, uint32_t name) { return; }
+static void eventremhand(void *data, struct wl_registry *registry, uint32_t name) { return; }
 
 const struct wl_registry_listener reglistener = {
 	.global = eventhand,
 	.global_remove = eventremhand,
 };
 
-void wlstart() {
+static void wlstart() {
   memset(&state, 0, sizeof(state));
 
   WLCHECK(state.dpy=wl_display_connect(NULL),"Could not connect to the wayland display!");
@@ -115,7 +111,7 @@ void wlstart() {
 	state.kb = zwp_virtual_keyboard_manager_v1_create_virtual_keyboard(state.mgr, state.seat);
 }
 
-void wlend() {
+static void wlend() {
 	zwp_virtual_keyboard_v1_destroy(state.kb);
 	zwp_virtual_keyboard_manager_v1_destroy(state.mgr);
 	wl_registry_destroy(state.reg);

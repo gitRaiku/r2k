@@ -15,7 +15,18 @@
 #include "log.h"
 
 #include "config.h"
-#include "type.h"
+
+#if !TYPE_WL && !TYPE_XORG
+  #error "Please enable at least one typing method"
+#endif
+
+#if TYPE_WL
+#include "type-wl.h"
+#endif
+
+#if TYPE_XORG
+#include "type-x.h"
+#endif
 
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ 4
@@ -120,7 +131,6 @@ void cleanup() {
 
   XSync(dpy, False);
   XCloseDisplay(dpy);
-
 }
 
 void die(uint32_t code) {
@@ -669,7 +679,6 @@ void setup() {
 
   drw_resize(mw, mh);
   drawmenu();
-  wlstart();
 }
 
 size_t nextrune(int32_t inc) {
@@ -700,7 +709,20 @@ void insert(const char *str, ssize_t n) {
 
 void type_selection() {
   cleanup();
-  type_str(results[res_selected]);
+#if TYPE_WL
+  char *wld = getenv("WAYLAND_DISPLAY");
+  if (wld != NULL && *wld != '\0') {
+    type_str_wl(results[res_selected]);
+    return;
+  }
+#if !TYPE_XORG
+  else { log_format(10, stderr, "Could not write the output! Not in wayland and Xorg support was not built!"); exit(1); }
+#endif
+#endif
+#if TYPE_XORG
+  fprintf(stdout, "Type X");
+  type_str_x(results[res_selected]);
+#endif
 }
 
 uint32_t mod(int32_t val, int32_t m) {
@@ -946,7 +968,6 @@ int main(int argc, char **argv) {
   setup();
   run();
 
-  wlend();
   shutdown_server_connection();
   return 0;
 }

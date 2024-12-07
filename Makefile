@@ -1,6 +1,8 @@
 all: client server
 
-.PHONY: build client server log
+.PHONY: build client server log ""
+
+# I know this makefile is pretty messy but it's old and i don't wanna rewrite it
 
 CC = gcc
 DATE := $(shell date "+%Y-%m-%d")
@@ -10,6 +12,20 @@ INCLUDE_FLAGS = -I/usr/X11R6/include -I/usr/include/freetype2
 LIBRARY_FLAGS = -L/usr/X11R6/lib -lXft -lX11 -lfontconfig -lxkbcommon -lwayland-client
 
 KB_PROTOCOL = virtual-keyboard-unstable-v1.xml
+
+REQ_XORG = $(shell grep 'TYPE_XORG' src/config.h | tail -c 2)
+ifeq ($(REQ_XORG),1)
+REQ_XORG = src/type-x.o
+else
+REQ_XORG =
+endif
+
+REQ_WL = $(shell grep 'TYPE_WL' src/config.h | tail -c 2)
+ifeq ($(REQ_WL),1)
+REQ_WL = src/type-wl.o protocol/kb-protocol.o
+else
+REQ_WL = 
+endif
 
 protocol/kb-protocol.c: protocol/virtual-keyboard-unstable-v1.xml
 	wayland-scanner private-code < protocol/virtual-keyboard-unstable-v1.xml > protocol/kb-protocol.c
@@ -26,11 +42,14 @@ src/log.o: src/log.c
 src/r2k.o: src/r2k.c
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/r2k.o src/r2k.c 
 
-src/type.o: src/type.c
-	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type.o src/type.c 
-	
-client: src/log.o src/r2k.o src/type.o protocol/kb-protocol.o
-	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2k protocol/kb-protocol.o src/r2k.o src/type.o src/log.o 
+src/type-x.o: src/type-x.c
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type-x.o src/type-x.c 
+
+src/type-wl.o: src/type-wl.c 
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type-wl.o src/type-wl.c 
+
+client: src/log.o src/r2k.o $(REQ_WL) $(REQ_XORG) 
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o r2k src/r2k.o $(REQ_WL) $(REQ_XORG) src/log.o 
 
 src/daemon.o: src/daemon.c
 	./update_defs
@@ -49,7 +68,7 @@ install: client server
 	cp -f r2k /usr/local/bin/r2k
 	cp -f r2kd /usr/local/bin/r2kd
 
-run: client
+run:
 	./r2k
 
 uninstall:
