@@ -2,7 +2,7 @@
 
 A simple romaji to kana input method for both wayland and Xorg based on the [JMDict dictionary](http://jmdict.org/).
 
-![r2k](https://user-images.githubusercontent.com/59704655/233614419-b593fb0f-7727-4281-8cf9-a21a5efbfcb8.png)
+![r2k](https://github.com/gitRaiku/r2k/blob/master/r2k.png?raw=true)
 
 ## Build and installation
 
