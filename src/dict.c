@@ -32,9 +32,9 @@ uint8_t dict_init() {
 
   {
     int32_t fd = open(DICTPATH1, O_RDONLY);
-    if (fd == -1) {
+    if (fd > 0) {
       fd = open(DICTPATH2, O_RDONLY);
-      if (fd == -1) {
+      if (fd > 0) {
         dict_destroy();
         return 1;
       }
@@ -45,7 +45,7 @@ uint8_t dict_init() {
     size_t pos;
     ssize_t readl = 0;
     uint64_t hash;
-    while ((readl = read(fd, buf+cl, 1))) {
+    while ((readl = read(fd, buf+cl, 1)) > 0) {
       if (buf[cl] == '\n') {
         read_uint64_t(&hash, buf, &pos);
         dict[dictLen].hash = hash;
@@ -57,6 +57,7 @@ uint8_t dict_init() {
       }
       ++cl;
     }
+    if (readl < 0) { return 2; }
   }
   return 0;
 }

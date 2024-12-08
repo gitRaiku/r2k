@@ -17,4 +17,6 @@ const char *colors[SchemeLast][2] = {
 
 const char *use_fonts[] = { "JetBrainsMono:size=18" };
 
+const uint32_t log_level = 10; /// 0 for all logging, 10 for errors
+
 #endif //R2K_CONFIG_H

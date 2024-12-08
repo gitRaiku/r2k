@@ -689,7 +689,7 @@ size_t nextrune(int32_t inc) {
   return n;
 }
 
-void __inline__ print_buf() {
+void print_buf() {
   log_format(0, stdout, "Current buffer: \"%s\", cursor = %lu\n", text, cursor);
 }
 
@@ -712,6 +712,7 @@ void type_selection() {
 #if TYPE_WL
   char *wld = getenv("WAYLAND_DISPLAY");
   if (wld != NULL && *wld != '\0') {
+    log_format(0, stdout, "Typing in Wayland!\n");
     type_str_wl(results[res_selected]);
     return;
   }
@@ -720,7 +721,7 @@ void type_selection() {
 #endif
 #endif
 #if TYPE_XORG
-  fprintf(stdout, "Type X");
+  log_format(0, stdout, "Typing in Xorg!\n");
   type_str_x(results[res_selected]);
 #endif
 }
@@ -915,7 +916,7 @@ void shutdown_server_connection() {
 
 int main(int argc, char **argv) {
   setlocale(LC_ALL, "");
-  set_logging_level(10);
+  set_logging_level(log_level);
 
   setup_server_connection();
 

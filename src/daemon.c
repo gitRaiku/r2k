@@ -11,6 +11,7 @@
 
 #include "log.h"
 #include "dict.h"
+#include "config.h"
 
 volatile uint8_t run;
 sig_atomic_t recv_sig = 0;
@@ -587,8 +588,12 @@ end:;
 }
  
 int32_t start_daemon() {
-  if (dict_init()) {
+  uint8_t r = dict_init();
+  if (r == 1) {
     log_format(10, log_file, "Could not initialize the dictionary at path %s or %s!\n", DICTPATH1, DICTPATH2);
+    return 1;
+  } else if (r == 2) {
+    log_format(10, log_file, "Could not read from the dictionary at path %s or %s!\n", DICTPATH1, DICTPATH2);
     return 1;
   }
 
@@ -689,8 +694,8 @@ int32_t start_daemon() {
 int main() {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
-  log_string(10, "All logging will be done to /var/log/r2k.log!\n", stdout);
-  set_logging_level(10);
+  log_string(0, "All logging will be done to /var/log/r2k.log!\n", stdout);
+  set_logging_level(log_level);
 
   pid = 0;
   pid = fork();

@@ -6,8 +6,8 @@ all: client server
 
 CC = gcc
 DATE := $(shell date "+%Y-%m-%d")
-# COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
-COMPILE_FLAGS = -Ofast -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
+COMPILE_FLAGS = -Og -g -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
+# COMPILE_FLAGS = -Ofast -ggdb3 -march=native -mtune=native -Wall -D_FORTIFY_SOURCE=2 -fmodulo-sched
 INCLUDE_FLAGS = -I/usr/X11R6/include -I/usr/include/freetype2 
 KB_PROTOCOL = virtual-keyboard-unstable-v1.xml
 LIBRARY_FLAGS := -L/usr/X11R6/lib -lXft -lX11 -lfontconfig -lxkbcommon
