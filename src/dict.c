@@ -32,9 +32,9 @@ uint8_t dict_init() {
 
   {
     int32_t fd = open(DICTPATH1, O_RDONLY);
-    if (fd > 0) {
+    if (fd < 0) {
       fd = open(DICTPATH2, O_RDONLY);
-      if (fd > 0) {
+      if (fd < 0) {
         dict_destroy();
         return 1;
       }

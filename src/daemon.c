@@ -691,9 +691,10 @@ int32_t start_daemon() {
   return recv_sig;
 }
 
-int main() {
+int main(int argc, char **argv) {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
+  if (argc > 1) { if (!strcmp(argv[1], "--stderr")) { log_file = stderr; } }
   log_string(0, "All logging will be done to /var/log/r2k.log!\n", stdout);
   set_logging_level(log_level);
 
@@ -708,7 +709,9 @@ int main() {
 
   umask(0);
 
-  log_file = fopen("/var/log/r2k.log", "a+");
+  if (log_file != stderr) {
+    log_file = fopen("/var/log/r2k.log", "a+");
+  }
   if (log_file == NULL) {
     log_string(10, "Could not open the log file, aborting!\n", stderr);
     perror("r2k");
@@ -728,7 +731,7 @@ int main() {
 
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
-  close(STDERR_FILENO);
+  if (log_file == stderr) { close(STDERR_FILENO); }
 
   int32_t exit_code;
 

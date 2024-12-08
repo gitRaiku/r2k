@@ -69,7 +69,7 @@ debug: client
 
 install: client server
 	mkdir -p /usr/local/share/r2k/
-	cp -f dict/RaikuDict /usr/local/share/r2k/r2kdict
+	cp -f resources/RaikuDict /usr/local/share/r2k/r2kdict
 	cp -f bin/r2k /usr/local/bin/r2k
 	cp -f bin/r2kd /usr/local/bin/r2kd
 
