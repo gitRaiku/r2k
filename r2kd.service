@@ -1,0 +1,9 @@
+[Unit]
+Description=Romaji to kana daemon
+
+[Service]
+Type=forking
+ExecStart=/usr/local/bin/r2kd
+
+[Install]
+WantedBy=multi-user.target
