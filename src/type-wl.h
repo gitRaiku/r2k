@@ -7,7 +7,7 @@
 #include <time.h>
 #include <xkbcommon/xkbcommon.h>
 #include <wayland-client.h>
-#include "../protocol/kb-protocol.h"
+#include "protocol/kb-protocol.h"
 #include "log.h"
 
 uint8_t type_str_wl(char *__restrict str);

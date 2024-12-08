@@ -2,7 +2,7 @@
 
 A simple romaji to kana input method for both wayland and Xorg based on the [JMDict dictionary](http://jmdict.org/).
 
-![r2k](https://github.com/gitRaiku/r2k/blob/master/r2k.png?raw=true)
+![r2k](https://github.com/gitRaiku/r2k/blob/master/resources/r2k.png?raw=true)
 
 ## Configuration
 Since this project was inspired by suckless' [dmenu](https://tools.suckless.org/dmenu/) and their philosophy all configuration is done through the ``src/config.h`` file. In there you can also disable support for Xorg or Wayland typing. Rendering however is currently only handled in Xorg.

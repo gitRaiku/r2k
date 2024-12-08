@@ -1,9 +1,0 @@
-#!/bin/sh
-
-DPATH="$PWD/dict/RaikuDict"
-WCL=$(wc -l $DPATH)
-echo wc -l $DPATH
-WC=${WCL%%' '*}
-echo $WC
-
-echo -e "#define DICTPATH \"$DPATH\"\n#define DICT_ENTRIES $WC" > src/defs.h

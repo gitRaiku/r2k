@@ -3,3 +3,4 @@ cmake-build-debug/
 r2k
 r2kd
 src/*.o
+bin/
