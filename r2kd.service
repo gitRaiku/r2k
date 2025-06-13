@@ -4,6 +4,7 @@ Description=Romaji to kana daemon
 [Service]
 Type=forking
 ExecStart=/usr/local/bin/r2kd
+KillSignal=SIGHUP
 
 [Install]
 WantedBy=multi-user.target

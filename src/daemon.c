@@ -20,8 +20,12 @@ sig_atomic_t recv_sig = 0;
 FILE *__restrict log_file;
 
 static void interrupt_handler(sig_atomic_t sig) {
+  log_format(10, log_file, "Recieved signal %u\n", sig);
+  fflush(log_file);
   run = 0;
+  unlink(SOCK_PATH);
   recv_sig = sig;
+  exit(1);
 }
 
 //                          。      ぁ      あ      ぃ      い      ぅ      う      ぇ      え      ぉ      
@@ -588,6 +592,9 @@ end:;
 }
  
 int32_t start_daemon() {
+  signal(SIGINT, interrupt_handler);
+  signal(SIGHUP, interrupt_handler);
+
   uint8_t r = dict_init();
   if (r == 1) {
     log_format(10, log_file, "Could not initialize the dictionary at path %s or %s!\n", DICTPATH1, DICTPATH2);
@@ -600,9 +607,6 @@ int32_t start_daemon() {
   log_format(0, log_file, "Initialized the dictionary with %u entries!\n", dictLen);
 
   run = 1;
-
-  signal(SIGINT, interrupt_handler);
-  signal(SIGHUP, interrupt_handler);
 
   int32_t ssock, csock, rc;
   socklen_t len;
@@ -718,6 +722,9 @@ int main(int argc, char **argv) {
 
   umask(0);
 
+  signal(SIGINT, interrupt_handler);
+  signal(SIGHUP, interrupt_handler);
+
   if (log_file != stderr) {
     log_file = fopen("/var/log/r2k.log", "a+");
   }
@@ -747,6 +754,7 @@ int main(int argc, char **argv) {
   exit_code = start_daemon();
 
   log_format(exit_code, log_file, "Exited with code %i\n", exit_code);
+  unlink(SOCK_PATH);
   fclose(log_file);
   return exit_code;
 }
