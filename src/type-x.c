@@ -100,7 +100,9 @@ static uint32_t utf8_to_unicode(char *__restrict str, uint32_t l) {
 
 static uint32_t char_to_uc(char *str, uint32_t cl) { /// TODO: Fuck Xorg 
   char i_hate_xorg[10] = {0};
-  snprintf(i_hate_xorg, sizeof(i_hate_xorg), "U%4X", utf8_to_unicode(str, cl));
+  //snprintf(i_hate_xorg, sizeof(i_hate_xorg), "U%4X", utf8_to_unicode(str, cl));
+  snprintf(i_hate_xorg, sizeof(i_hate_xorg), "U%X", utf8_to_unicode(str, cl));
+  // fprintf(stdout, "A %s, unic %u, %s", str, utf8_to_unicode(str, cl), i_hate_xorg);
   uint32_t keysym = XStringToKeysym(i_hate_xorg);
   return keysym;
 }
