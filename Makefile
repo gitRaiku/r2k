@@ -83,4 +83,5 @@ uninstall:
 clean:
 	rm -f src/*.o
 	rm -f src/protocol/*.c src/protocol/*.h src/protocol/*.o
+	rm -rf bin/
 

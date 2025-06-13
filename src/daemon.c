@@ -618,6 +618,13 @@ int32_t start_daemon() {
   }
   len = sizeof(ssockaddr);
 
+  if (unlink(SOCK_PATH) < 0) { 
+    if (errno != ENOENT) {
+      log_format(10, log_file, "Could not unlink %s: %m!\n", SOCK_PATH); 
+      close(ssock);
+      return 1;
+    }
+  }
   ssockaddr.sun_family = AF_UNIX;
   strcpy(ssockaddr.sun_path, SOCK_PATH);
 
@@ -694,7 +701,9 @@ int32_t start_daemon() {
 int main(int argc, char **argv) {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
-  if (argc > 1) { if (!strcmp(argv[1], "--stderr")) { log_file = stderr; } }
+  log_file = stderr;
+  //if (argc > 1) { if (!strcmp(argv[1], "--stderr")) { log_file = stderr; } }
+  if (argc > 1) { if (!strcmp(argv[1], "--log")) { log_file = 0; } }
   if (log_file != stderr) { log_string(0, "All logging will be done to /var/log/r2k.log!\n", stdout); }
   set_logging_level(log_level);
 
@@ -731,7 +740,7 @@ int main(int argc, char **argv) {
 
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
-  if (log_file == stderr) { close(STDERR_FILENO); }
+  if (log_file != stderr) { close(STDERR_FILENO); }
 
   int32_t exit_code;
 
