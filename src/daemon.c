@@ -695,7 +695,7 @@ int main(int argc, char **argv) {
   pid_t pid, sid;
   setlocale(LC_ALL, "");
   if (argc > 1) { if (!strcmp(argv[1], "--stderr")) { log_file = stderr; } }
-  log_string(0, "All logging will be done to /var/log/r2k.log!\n", stdout);
+  if (log_file != stderr) { log_string(0, "All logging will be done to /var/log/r2k.log!\n", stdout); }
   set_logging_level(log_level);
 
   pid = 0;

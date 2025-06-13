@@ -1,6 +1,14 @@
+# I am not a big fan of this file))))))0
 cmake-build-debug/
 .idea/
 r2k
 r2kd
 src/*.o
+!src/protocol/virtual-keyboard-unstable-v1.xml
+src/protocol/*.c
+src/protocol/*.h
+src/protocol/*.o
 bin/
+bin/*
+*.o
+
