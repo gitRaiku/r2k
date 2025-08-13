@@ -40,14 +40,14 @@ src/protocol/kb-protocol.o: src/protocol/kb-protocol.c src/protocol/kb-protocol.
 src/log.o: src/log.c
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/log.o src/log.c 
 
-src/r2k.o: src/r2k.c
-	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/r2k.o src/r2k.c 
+src/r2k.o: src/r2k.c src/protocol/kb-protocol.h
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/r2k.o src/r2k.c
 
 src/type-x.o: src/type-x.c
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type-x.o src/type-x.c 
 
-src/type-wl.o: src/type-wl.c 
-	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type-wl.o src/type-wl.c 
+src/type-wl.o: src/type-wl.c src/protocol/kb-protocol.h
+	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -c -o src/type-wl.o src/type-wl.c
 
 client: src/log.o src/r2k.o bin $(REQ_WL) $(REQ_XORG) 
 	$(CC) $(COMPILE_FLAGS) $(INCLUDE_FLAGS) $(LIBRARY_FLAGS) -o bin/r2k src/r2k.o $(REQ_WL) $(REQ_XORG) src/log.o 
